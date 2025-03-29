@@ -854,6 +854,11 @@ require("conform").setup({
 				PRETTIERD_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/prettierrc.json"),
 			},
 			condition = function(ctx)
+				-- 파일 타입이 YAML이면 항상 true 반환
+				if vim.bo.filetype == "yaml" then
+					return true
+				end
+
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
 
 				local has_prettier = vim.fn.filereadable(root_dir .. "/.prettierrc") == 1
