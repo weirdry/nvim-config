@@ -879,7 +879,7 @@ require("lint").linters_by_ft = {
 	typescriptreact = { "eslint" },
 	javascriptreact = { "eslint" },
 	python = { "ruff" },
-	go = { "golangci-lint" },
+	go = { "golangcilint" },
 }
 
 -- 파일 저장 시 린팅 실행
