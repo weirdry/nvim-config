@@ -912,6 +912,42 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
 	end,
 })
 
+require("lint").linters.golangcilint = {
+	cmd = "golangci-lint",
+	stdin = false,
+	args = { "run", "--out-format", "json", "--issues-exit-code=0" },
+	stream = "stdout",
+	ignore_exitcode = true,
+	parser = function(output, bufnr)
+		local diagnostics = {}
+		if output == "" then
+			return diagnostics
+		end
+
+		local decoded = vim.json.decode(output)
+		if not decoded or not decoded.Issues then
+			return diagnostics
+		end
+
+		for _, issue in ipairs(decoded.Issues) do
+			local filename = issue.Pos.Filename
+			local bufname = vim.api.nvim_buf_get_name(bufnr)
+			if vim.fn.fnamemodify(filename, ":p") == bufname then
+				table.insert(diagnostics, {
+					lnum = issue.Pos.Line - 1,
+					col = issue.Pos.Column - 1,
+					end_lnum = issue.Pos.Line - 1,
+					end_col = issue.Pos.Column - 1,
+					severity = 1, -- Error
+					message = issue.Text,
+					source = issue.FromLinter,
+				})
+			end
+		end
+		return diagnostics
+	end,
+}
+
 -- 2. 포맷팅 설정 (conform.nvim)
 require("conform").setup({
 	formatters_by_ft = {
