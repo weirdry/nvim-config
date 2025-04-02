@@ -11,12 +11,14 @@ A modern, IDE-like Neovim configuration with full LSP support, optimized for Typ
 - 🔍 Full LSP integration via [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig)
   - TypeScript/JavaScript
   - Python
+  - Go
   - Tailwind CSS
   - And more!
 - 📊 Syntax highlighting with [Treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - 🔎 Fuzzy finding with [Telescope](https://github.com/nvim-telescope/telescope.nvim)
 - 📁 File navigation with [nvim-tree](https://github.com/nvim-tree/nvim-tree.lua)
 - 📝 Auto-completion via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
+- 🚀 Go development environment with [go.nvim](https://github.com/ray-x/go.nvim)
 - 🐛 Debugging support with [nvim-dap](https://github.com/mfussenegger/nvim-dap)
 - 💅 Code formatting with [conform.nvim](https://github.com/stevearc/conform.nvim)
 - 🔬 Linting with [nvim-lint](https://github.com/mfussenegger/nvim-lint)
@@ -34,6 +36,7 @@ A modern, IDE-like Neovim configuration with full LSP support, optimized for Typ
 - A [Nerd Font](https://www.nerdfonts.com/) for icons
 - Node.js and npm (for LSP servers)
 - Python 3 (for Python-related features)
+- Go (for Go-related features)
 
 ## Installation
 

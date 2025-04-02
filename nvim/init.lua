@@ -112,29 +112,35 @@ require("lazy").setup({
 		config = function()
 			require("mason").setup()
 			require("mason-lspconfig").setup({
-				ensure_installed = { "ts_ls", "tailwindcss", "pyright" },
+				ensure_installed = { "ts_ls", "tailwindcss", "pyright", "gopls" },
 			})
 		end,
 	},
 
-	-- Mason 도구 자동 설치
+	-- Mason tools auto installation
 	{
 		"WhoIsSethDaniel/mason-tool-installer.nvim",
 		dependencies = { "williamboman/mason.nvim" },
 		config = function()
 			require("mason-tool-installer").setup({
 				ensure_installed = {
-					-- Python 도구들
-					"black", -- 포맷터
-					"isort", -- import 포맷터
-					"ruff", -- 린터
+					-- Python tools
+					"black", -- formatter
+					"isort", -- import formatter
+					"ruff", -- linter
 
-					-- TypeScript / JavaScript 도구들
+					-- TypeScript / JavaScript tools
 					"prettier",
 					"eslint_d",
 
-					-- 기타 도구들
-					"stylua", -- Lua 포맷터
+					-- Go tools
+					"gopls", -- Go language server
+					"golangci-lint", -- Go linter
+					"gofumpt", -- Go formatter (gofmt strict version)
+					"goimports", -- import auto management
+
+					-- other tools
+					"stylua", -- Lua formatter
 				},
 				auto_update = true,
 				run_on_start = true,
@@ -244,7 +250,7 @@ require("lazy").setup({
 		build = ":TSUpdate",
 		config = function()
 			require("nvim-treesitter.configs").setup({
-				ensure_installed = { "typescript", "javascript", "tsx", "html", "css", "lua", "python" },
+				ensure_installed = { "typescript", "javascript", "tsx", "html", "css", "lua", "python", "go" },
 				highlight = { enable = true },
 				indent = { enable = true },
 			})
@@ -576,6 +582,37 @@ require("lazy").setup({
 		end,
 	},
 
+	{
+		"ray-x/go.nvim",
+		dependencies = {
+			"ray-x/guihua.lua",
+			"neovim/nvim-lspconfig",
+			"nvim-treesitter/nvim-treesitter",
+		},
+		config = function()
+			require("go").setup({
+				lsp_cfg = false, -- gopls 설정은 lspconfig에서 이미 했으므로 비활성화
+				lsp_gofumpt = true, -- gofumpt를 사용하여 포맷팅
+				lsp_on_attach = true, -- 기본 on_attach 사용
+				dap_debug = true, -- DAP 디버깅 활성화
+				dap_debug_vt = true, -- 가상 텍스트로 변수 값 표시
+				dap_debug_gui = true, -- GUI 디버깅 활성화
+			})
+
+			-- gopls 시작을 위한 자동 명령
+			local format_sync_grp = vim.api.nvim_create_augroup("GoFormat", {})
+			vim.api.nvim_create_autocmd("BufWritePre", {
+				pattern = "*.go",
+				callback = function()
+					require("go.format").goimport()
+				end,
+				group = format_sync_grp,
+			})
+		end,
+		ft = { "go", "gomod" },
+		build = ':lua require("go.install").update_all_sync()',
+	},
+
 	-- 기타 유틸리티
 	{ "mattn/emmet-vim" },
 	{ "cdelledonne/vim-cmake" },
@@ -753,6 +790,51 @@ require("lspconfig").pyright.setup({
 	end,
 })
 
+-- Go LSP 설정
+require("lspconfig").gopls.setup({
+	capabilities = capabilities,
+	settings = {
+		gopls = {
+			analyses = {
+				unusedparams = true,
+				shadow = true,
+			},
+			staticcheck = true,
+			gofumpt = true,
+			usePlaceholders = true,
+			completeUnimported = true,
+			matcher = "fuzzy",
+		},
+	},
+	on_attach = function(client, bufnr)
+		if client.server_capabilities.documentSymbolProvider then
+			require("nvim-navic").attach(client, bufnr)
+		end
+
+		-- 기본 키 매핑
+		vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr })
+		vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = bufnr })
+		vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = bufnr })
+		vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr })
+		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = bufnr })
+		vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = bufnr })
+
+		-- Go 전용 키 매핑
+		vim.keymap.set(
+			"n",
+			"<leader>gtf",
+			"<cmd>lua vim.lsp.buf.type_definition()<CR>",
+			{ buffer = bufnr, desc = "Go to type definition" }
+		)
+		vim.keymap.set(
+			"n",
+			"<leader>gim",
+			"<cmd>lua vim.lsp.buf.implementation()<CR>",
+			{ buffer = bufnr, desc = "Go to implementation" }
+		)
+	end,
+})
+
 -- 자동 완성 설정
 local cmp = require("cmp")
 cmp.setup({
@@ -797,6 +879,7 @@ require("lint").linters_by_ft = {
 	typescriptreact = { "eslint" },
 	javascriptreact = { "eslint" },
 	python = { "ruff" },
+	go = { "golangci-lint" },
 }
 
 -- 파일 저장 시 린팅 실행
@@ -842,6 +925,7 @@ require("conform").setup({
 		markdown = { "prettier" },
 		python = { "black", "isort" },
 		lua = { "stylua" },
+		go = { "gofumpt", "goimports" },
 	},
 	format_on_save = {
 		timeout_ms = 3000,
@@ -938,6 +1022,7 @@ vim.o.tabstop = 2
 vim.o.shiftwidth = 2
 vim.o.expandtab = false
 vim.cmd([[autocmd FileType python setlocal tabstop=4 shiftwidth=4 expandtab]])
+vim.cmd([[autocmd FileType go setlocal tabstop=4 shiftwidth=4 noexpandtab]])
 
 -- Winbar 설정
 vim.api.nvim_set_hl(0, "Winbar", { bg = "#1a1b26", fg = "#a9b1d6", bold = true, italic = false })
