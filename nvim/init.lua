@@ -814,10 +814,10 @@ dap.configurations.rust = {
 -- =============================================================================
 -- 린팅
 require("lint").linters_by_ft = {
-	javascript = { "eslint_d" },
-	typescript = { "eslint_d" },
-	typescriptreact = { "eslint_d" },
-	javascriptreact = { "eslint_d" },
+	javascript = { "eslint" },
+	typescript = { "eslint" },
+	typescriptreact = { "eslint" },
+	javascriptreact = { "eslint" },
 	python = { "ruff" },
 	go = { "golangcilint" },
 	rust = { "clippy" },
