@@ -14,20 +14,27 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- 기본 설정
+-- =============================================================================
+-- 기본 설정 (Options)
+-- =============================================================================
 vim.g.mapleader = " "
 vim.o.number = true
 vim.o.mouse = "a"
 vim.o.clipboard = "unnamedplus"
 vim.o.cursorline = true
+vim.o.tabstop = 2
+vim.o.shiftwidth = 2
+vim.o.expandtab = false
 
--- Lazy.nvim으로 플러그인 설정
+-- =============================================================================
+-- 플러그인 관리 (Lazy.nvim)
+-- =============================================================================
 require("lazy").setup({
 	-- 테마 및 UI
 	{
 		"folke/tokyonight.nvim",
-		lazy = false, -- 즉시 로드
-		priority = 1000, -- 테마는 먼저 로드되도록
+		lazy = false,
+		priority = 1000,
 		config = function()
 			require("tokyonight").setup({
 				style = "storm",
@@ -42,7 +49,6 @@ require("lazy").setup({
 			vim.cmd([[colorscheme tokyonight]])
 		end,
 	},
-	{ "kyazdani42/nvim-web-devicons" },
 	{
 		"nvim-lualine/lualine.nvim",
 		dependencies = { "nvim-tree/nvim-web-devicons" },
@@ -57,20 +63,52 @@ require("lazy").setup({
 		end,
 	},
 	{
+		"akinsho/bufferline.nvim",
+		dependencies = { "nvim-tree/nvim-web-devicons" },
+		config = function()
+			require("bufferline").setup({
+				options = {
+					mode = "buffers",
+					separator_style = "thin",
+					diagnostics = "nvim_lsp",
+					diagnostics_indicator = function(count, level, diagnostics_dict, context)
+						local s = " "
+						for e, n in pairs(diagnostics_dict) do
+							local sym = e == "error" and " " or (e == "warning" and " " or " ")
+							s = s .. n .. sym
+						end
+						return s
+					end,
+					indicator = { style = "underline" },
+					show_buffer_close_icons = true,
+					show_close_icon = true,
+					enforce_regular_tabs = true,
+					show_duplicate_prefix = true,
+					tab_size = 18,
+					padding = 1,
+					hover = { enabled = true, delay = 200, reveal = { "close" } },
+				},
+				highlights = {
+					indicator_selected = { fg = "#89b4fa", bg = "#1a1b26", underline = true, sp = "#89b4fa" },
+				},
+			})
+		end,
+	},
+	{
 		"SmiteshP/nvim-navic",
 		dependencies = { "neovim/nvim-lspconfig" },
 		config = function()
 			require("nvim-navic").setup({
 				icons = {
 					File = "󰈙 ",
-					Module = " ",
+					Module = " ",
 					Namespace = "󰌗 ",
-					Package = " ",
+					Package = " ",
 					Class = "󰌗 ",
 					Method = "󰆧 ",
-					Property = " ",
-					Field = " ",
-					Constructor = " ",
+					Property = " ",
+					Field = " ",
+					Constructor = " ",
 					Enum = "󰕘",
 					Interface = "󰕘",
 					Function = "󰊕 ",
@@ -83,9 +121,9 @@ require("lazy").setup({
 					Object = "󰅩 ",
 					Key = "󰌋 ",
 					Null = "󰟢 ",
-					EnumMember = " ",
+					EnumMember = " ",
 					Struct = "󰌗 ",
-					Event = " ",
+					Event = " ",
 					Operator = "󰆕 ",
 					TypeParameter = "󰊄 ",
 				},
@@ -97,75 +135,6 @@ require("lazy").setup({
 				safe_output = true,
 				lazy_update_context = false,
 				click = true,
-			})
-		end,
-	},
-
-	-- LSP 및 자동완성
-	{ "neovim/nvim-lspconfig" },
-	{
-		"williamboman/mason.nvim",
-		dependencies = {
-			"williamboman/mason-lspconfig.nvim",
-			"neovim/nvim-lspconfig",
-		},
-		config = function()
-			require("mason").setup()
-			require("mason-lspconfig").setup({
-				ensure_installed = { "ts_ls", "tailwindcss", "pyright", "gopls" },
-			})
-		end,
-	},
-
-	-- Mason tools auto installation
-	{
-		"WhoIsSethDaniel/mason-tool-installer.nvim",
-		dependencies = { "williamboman/mason.nvim" },
-		config = function()
-			require("mason-tool-installer").setup({
-				ensure_installed = {
-					-- Python tools
-					"black", -- formatter
-					"isort", -- import formatter
-					"ruff", -- linter
-
-					-- TypeScript / JavaScript tools
-					"prettier",
-					"eslint_d",
-
-					-- Go tools
-					"gopls", -- Go language server
-					"golangci-lint", -- Go linter
-					"gofumpt", -- Go formatter (gofmt strict version)
-					"goimports", -- import auto management
-
-					-- other tools
-					"stylua", -- Lua formatter
-				},
-				auto_update = true,
-				run_on_start = true,
-			})
-		end,
-	},
-	{ "hrsh7th/nvim-cmp" },
-	{ "hrsh7th/cmp-nvim-lsp" },
-	{ "hrsh7th/cmp-buffer" },
-	{ "hrsh7th/cmp-path" },
-
-	-- 파일 탐색 및 검색
-	{
-		"nvim-telescope/telescope.nvim",
-		dependencies = { "nvim-lua/plenary.nvim", "SmiteshP/nvim-navic" },
-		config = function()
-			require("telescope").setup({
-				defaults = {
-					winbar = {
-						enable = true,
-						name_formatter = function(entry)
-							return require("nvim-navic").get_location()
-						end,
-					},
-				},
 			})
 		end,
 	},
@@ -187,6 +156,67 @@ require("lazy").setup({
 				show_modified = true,
 				show_dirname = true,
 				show_basename = true,
+			})
+		end,
+	},
+	{ "kyazdani42/nvim-web-devicons" },
+
+	-- LSP, 자동완성, 도구 설치
+	{ "neovim/nvim-lspconfig" },
+	{
+		"williamboman/mason.nvim",
+		dependencies = { "williamboman/mason-lspconfig.nvim", "neovim/nvim-lspconfig" },
+		config = function()
+			require("mason").setup()
+			require("mason-lspconfig").setup({
+				ensure_installed = { "ts_ls", "tailwindcss", "pyright", "gopls", "rust_analyzer" },
+			})
+		end,
+	},
+	{
+		"WhoIsSethDaniel/mason-tool-installer.nvim",
+		dependencies = { "williamboman/mason.nvim" },
+		config = function()
+			require("mason-tool-installer").setup({
+				ensure_installed = {
+					-- Python tools
+					"black",
+					"isort",
+					"ruff",
+					-- TypeScript / JavaScript tools
+					"prettier",
+					"eslint_d",
+					-- Go tools
+					"gopls",
+					"golangci-lint",
+					"gofumpt",
+					"goimports",
+					-- Rust tools
+					"codelldb",
+					-- other tools
+					"stylua",
+				},
+				auto_update = true,
+				run_on_start = true,
+			})
+		end,
+	},
+	{ "hrsh7th/nvim-cmp", dependencies = { "hrsh7th/cmp-nvim-lsp", "hrsh7th/cmp-buffer", "hrsh7th/cmp-path" } },
+
+	-- 파일 탐색 및 검색
+	{
+		"nvim-telescope/telescope.nvim",
+		dependencies = { "nvim-lua/plenary.nvim", "SmiteshP/nvim-navic" },
+		config = function()
+			require("telescope").setup({
+				defaults = {
+					winbar = {
+						enable = true,
+						name_formatter = function(entry)
+							return require("nvim-navic").get_location()
+						end,
+					},
+				},
 			})
 		end,
 	},
@@ -220,37 +250,29 @@ require("lazy").setup({
 				jump = { autojump = true },
 				modes = { char = { enabled = true, highlight = { backdrop = true } } },
 			})
-			vim.keymap.set({ "n", "x", "o" }, "s", function()
-				require("flash").jump()
-			end)
-			vim.keymap.set({ "n", "x", "o" }, "<leader>fs", function()
-				require("flash").treesitter()
-			end, { desc = "Search Flash Treesitter" })
-			vim.keymap.set("o", "r", function()
-				require("flash").remote()
-			end)
-			vim.keymap.set({ "o", "x" }, "R", function()
-				require("flash").treesitter_search()
-			end)
 		end,
 	},
 
-	-- Git 통합
-	{ "tpope/vim-fugitive" },
-	{
-		"lewis6991/gitsigns.nvim",
-		config = function()
-			require("gitsigns").setup()
-		end,
-	},
-
-	-- 코드 분석 및 하이라이팅
+	-- 코드 분석, 하이라이팅, 포맷팅
+	{ "mfussenegger/nvim-lint", event = { "BufReadPre", "BufNewFile" } },
+	{ "stevearc/conform.nvim", event = { "BufReadPre", "BufNewFile" } },
 	{
 		"nvim-treesitter/nvim-treesitter",
 		build = ":TSUpdate",
 		config = function()
 			require("nvim-treesitter.configs").setup({
-				ensure_installed = { "typescript", "javascript", "tsx", "html", "css", "lua", "python", "go" },
+				ensure_installed = {
+					"typescript",
+					"javascript",
+					"tsx",
+					"html",
+					"css",
+					"lua",
+					"python",
+					"go",
+					"rust",
+					"toml",
+				},
 				highlight = { enable = true },
 				indent = { enable = true },
 			})
@@ -265,17 +287,14 @@ require("lazy").setup({
 		end,
 	},
 
-	-- null-ls 대신 사용할 두 플러그인 추가
+	-- Git 관련
+	{ "tpope/vim-fugitive" },
 	{
-		"mfussenegger/nvim-lint",
-		event = { "BufReadPre", "BufNewFile" },
+		"lewis6991/gitsigns.nvim",
+		config = function()
+			require("gitsigns").setup()
+		end,
 	},
-	{
-		"stevearc/conform.nvim",
-		event = { "BufReadPre", "BufNewFile" },
-	},
-
-	-- Git 관련 추가 플러그인
 	{ "sindrets/diffview.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
 	{
 		"akinsho/git-conflict.nvim",
@@ -292,8 +311,7 @@ require("lazy").setup({
 		"rcarriga/nvim-dap-ui",
 		dependencies = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" },
 		config = function()
-			local dap = require("dap")
-			local dapui = require("dapui")
+			local dap, dapui = require("dap"), require("dapui")
 			dapui.setup()
 			dap.listeners.after.event_initialized["dapui_config"] = function()
 				dapui.open()
@@ -311,11 +329,7 @@ require("lazy").setup({
 	{
 		"stevearc/aerial.nvim",
 		config = function()
-			require("aerial").setup({
-				on_attach = function(bufnr)
-					vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle!<CR>", { buffer = bufnr })
-				end,
-			})
+			require("aerial").setup()
 		end,
 	},
 	{
@@ -323,109 +337,48 @@ require("lazy").setup({
 		branch = "harpoon2",
 		dependencies = { "nvim-lua/plenary.nvim" },
 		config = function()
-			local harpoon = require("harpoon")
-			harpoon:setup()
-			vim.keymap.set("n", "<leader>ha", function()
-				harpoon:list():add()
-			end, { desc = "Add file to Harpoon" })
-			vim.keymap.set("n", "<leader>hm", function()
-				harpoon.ui:toggle_quick_menu(harpoon:list())
-			end, { desc = "Toggle Harpoon menu" })
-			vim.keymap.set("n", "<leader>h1", function()
-				harpoon:list():select(1)
-			end, { desc = "Go to Harpoon file 1" })
-			vim.keymap.set("n", "<leader>h2", function()
-				harpoon:list():select(2)
-			end, { desc = "Go to Harpoon file 2" })
-			vim.keymap.set("n", "<leader>h3", function()
-				harpoon:list():select(3)
-			end, { desc = "Go to Harpoon file 3" })
-			vim.keymap.set("n", "<leader>h4", function()
-				harpoon:list():select(4)
-			end, { desc = "Go to Harpoon file 4" })
-			vim.keymap.set("n", "<leader>hp", function()
-				harpoon:list():prev()
-			end, { desc = "Previous Harpoon file" })
-			vim.keymap.set("n", "<leader>hn", function()
-				harpoon:list():next()
-			end, { desc = "Next Harpoon file" })
-			harpoon:extend({
-				UI_CREATE = function(cx)
-					vim.keymap.set("n", "<C-v>", function()
-						harpoon.ui:select_menu_item({ vsplit = true })
-					end, { buffer = cx.bufnr })
-					vim.keymap.set("n", "<C-x>", function()
-						harpoon.ui:select_menu_item({ split = true })
-					end, { buffer = cx.bufnr })
-					vim.keymap.set("n", "<C-t>", function()
-						harpoon.ui:select_menu_item({ tabedit = true })
-					end, { buffer = cx.bufnr })
-				end,
-			})
+			require("harpoon"):setup()
 		end,
 	},
 
-	-- 새로 추가된 플러그인들
+	-- 언어별 특화 플러그인
+	{
+		"saecki/crates.nvim",
+		tag = "stable",
+		dependencies = { "nvim-lua/plenary.nvim" },
+		ft = { "rust", "toml" },
+		config = function()
+			require("crates").setup({
+				src = { cmp = { enabled = true } },
+			})
+		end,
+	},
+	{
+		"ray-x/go.nvim",
+		dependencies = {
+			"ray-x/guihua.lua",
+			"neovim/nvim-lspconfig",
+			"nvim-treesitter/nvim-treesitter",
+		},
+		config = function()
+			require("go").setup({
+				lsp_cfg = false,
+				lsp_gofumpt = true,
+				lsp_on_attach = true,
+				dap_debug = true,
+				dap_debug_vt = true,
+				dap_debug_gui = true,
+			})
+		end,
+		ft = { "go", "gomod" },
+		build = ':lua require("go.install").update_all_sync()',
+	},
+
+	-- UI/UX 개선
 	{
 		"mg979/vim-visual-multi",
 		config = function()
 			vim.g.VM_theme = "ocean"
-			vim.g.VM_highlight_matches = "underline"
-		end,
-	},
-	{
-		"akinsho/bufferline.nvim",
-		dependencies = { "nvim-tree/nvim-web-devicons" },
-		config = function()
-			require("bufferline").setup({
-				options = {
-					mode = "buffers",
-					separator_style = "thin",
-					diagnostics = "nvim_lsp",
-					diagnostics_indicator = function(count, level, diagnostics_dict, context)
-						local s = " "
-						for e, n in pairs(diagnostics_dict) do
-							local sym = e == "error" and " " or (e == "warning" and " " or " ")
-							s = s .. n .. sym
-						end
-						return s
-					end,
-					indicator = { style = "underline" },
-					show_buffer_close_icons = true,
-					show_close_icon = true,
-					enforce_regular_tabs = true,
-					show_duplicate_prefix = true,
-					tab_size = 18,
-					padding = 1,
-					hover = { enabled = true, delay = 200, reveal = { "close" } },
-				},
-				highlights = {
-					indicator_selected = { fg = "#89b4fa", bg = "#1a1b26", underline = true, sp = "#89b4fa" },
-				},
-			})
-			vim.keymap.set("n", "<Tab>", "<Cmd>BufferLineCycleNext<CR>", {})
-			vim.keymap.set("n", "<S-Tab>", "<Cmd>BufferLineCyclePrev<CR>", {})
-			vim.keymap.set("n", "<leader>bc", "<Cmd>BufferLinePickClose<CR>", { desc = "Pick buffer to close" })
-			vim.keymap.set(
-				"n",
-				"<leader>bx",
-				"<Cmd>BufferLineCloseLeft<CR>",
-				{ desc = "Close all buffers to the left" }
-			)
-			vim.keymap.set(
-				"n",
-				"<leader>bX",
-				"<Cmd>BufferLineCloseRight<CR>",
-				{ desc = "Close all buffers to the right" }
-			)
-			vim.keymap.set("n", "<leader>bo", "<Cmd>BufferLineCloseOthers<CR>", { desc = "Close all other buffers" })
-			vim.keymap.set("n", "<leader>bp", "<Cmd>BufferLinePick<CR>", { desc = "Pick buffer" })
-			vim.keymap.set(
-				"n",
-				"<leader>bs",
-				"<Cmd>BufferLineSortByDirectory<CR>",
-				{ desc = "Sort buffers by directory" }
-			)
 		end,
 	},
 	{
@@ -457,22 +410,6 @@ require("lazy").setup({
 				},
 				routes = { { view = "notify", filter = { event = "msg_showmode" } } },
 			})
-			vim.keymap.set("n", "<leader>nl", function()
-				require("noice").cmd("last")
-			end, { desc = "Noice Last Message" })
-			vim.keymap.set("n", "<leader>nh", function()
-				require("noice").cmd("history")
-			end, { desc = "Noice History" })
-			vim.keymap.set({ "n", "i", "s" }, "<c-f>", function()
-				if not require("noice.lsp").scroll(4) then
-					return "<c-f>"
-				end
-			end, { silent = true, expr = true })
-			vim.keymap.set({ "n", "i", "s" }, "<c-b>", function()
-				if not require("noice.lsp").scroll(-4) then
-					return "<c-b>"
-				end
-			end, { silent = true, expr = true })
 		end,
 	},
 	{
@@ -490,13 +427,23 @@ require("lazy").setup({
 	{
 		"RRethy/vim-illuminate",
 		config = function()
-			require("illuminate").configure()
+			require("illuminate").configure({
+				providers = { "lsp", "treesitter", "regex" },
+				delay = 100,
+				filetypes_denylist = { "dirvish", "fugitive", "NvimTree" },
+			})
 		end,
 	},
 	{
 		"karb94/neoscroll.nvim",
 		config = function()
-			require("neoscroll").setup()
+			require("neoscroll").setup({
+				mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "<C-e>", "zt", "zz", "zb" },
+				hide_cursor = true,
+				stop_eof = true,
+				respect_scrolloff = true,
+				cursor_scrolls_alone = true,
+			})
 		end,
 	},
 	{
@@ -505,6 +452,26 @@ require("lazy").setup({
 			require("which-key").setup()
 		end,
 	},
+	{
+		"dstein64/nvim-scrollview",
+		config = function()
+			require("scrollview").setup({
+				excluded_filetypes = { "NvimTree", "toggleterm", "help" },
+				current_only = true,
+				base = "right",
+				column = 1,
+				signs_on_startup = { "diagnostics", "search", "marks" },
+				diagnostics_severities = {
+					vim.diagnostic.severity.ERROR,
+					vim.diagnostic.severity.WARN,
+					vim.diagnostic.severity.INFO,
+					vim.diagnostic.severity.HINT,
+				},
+			})
+		end,
+	},
+
+	-- 유틸리티
 	{
 		"iamcco/markdown-preview.nvim",
 		ft = "markdown",
@@ -521,15 +488,6 @@ require("lazy").setup({
 				float_opts = { border = "curved", width = 100, height = 20, winblend = 3 },
 				shade_terminals = true,
 			})
-			function _G.set_terminal_keymaps()
-				local opts = { buffer = 0 }
-				vim.keymap.set("t", "<esc><esc>", [[<C-\><C-n>]], opts)
-				vim.keymap.set("t", "<C-h>", [[<Cmd>wincmd h<CR>]], opts)
-				vim.keymap.set("t", "<C-j>", [[<Cmd>wincmd j<CR>]], opts)
-				vim.keymap.set("t", "<C-k>", [[<Cmd>wincmd k<CR>]], opts)
-				vim.keymap.set("t", "<C-l>", [[<Cmd>wincmd l<CR>]], opts)
-			end
-			vim.cmd("autocmd! TermOpen term://* lua set_terminal_keymaps()")
 		end,
 	},
 	{
@@ -547,28 +505,18 @@ require("lazy").setup({
 				default_register_macros = "q",
 				enable_macro_history = true,
 			})
-			require("telescope").load_extension("neoclip")
-			vim.keymap.set(
-				"n",
-				"<leader>fn",
-				":Telescope neoclip<CR>",
-				{ noremap = true, desc = "복사 히스토리 보기" }
-			)
 		end,
 	},
 	{
 		"AckslD/swenv.nvim",
 		config = function()
 			require("swenv").setup({
-				-- 프로젝트 루트의 .venv 디렉토리를 자동으로 감지
 				get_venvs = function()
 					local project_root = vim.fn.getcwd()
 					local project_venv = project_root .. "/.venv"
-
 					if vim.fn.isdirectory(project_venv) == 1 then
 						return { [".venv (Project)"] = project_venv }
 					else
-						-- 프로젝트 venv가 없으면 중앙 venvs 디렉토리 확인
 						return require("swenv.api").get_venvs_stable_order()
 					end
 				end,
@@ -576,44 +524,8 @@ require("lazy").setup({
 					vim.cmd("LspRestart")
 				end,
 			})
-			vim.keymap.set("n", "<leader>sv", function()
-				require("swenv.api").pick_venv()
-			end, { desc = "Select virtual environment" })
 		end,
 	},
-
-	{
-		"ray-x/go.nvim",
-		dependencies = {
-			"ray-x/guihua.lua",
-			"neovim/nvim-lspconfig",
-			"nvim-treesitter/nvim-treesitter",
-		},
-		config = function()
-			require("go").setup({
-				lsp_cfg = false, -- gopls 설정은 lspconfig에서 이미 했으므로 비활성화
-				lsp_gofumpt = true, -- gofumpt를 사용하여 포맷팅
-				lsp_on_attach = true, -- 기본 on_attach 사용
-				dap_debug = true, -- DAP 디버깅 활성화
-				dap_debug_vt = true, -- 가상 텍스트로 변수 값 표시
-				dap_debug_gui = true, -- GUI 디버깅 활성화
-			})
-
-			-- gopls 시작을 위한 자동 명령
-			local format_sync_grp = vim.api.nvim_create_augroup("GoFormat", {})
-			vim.api.nvim_create_autocmd("BufWritePre", {
-				pattern = "*.go",
-				callback = function()
-					require("go.format").goimport()
-				end,
-				group = format_sync_grp,
-			})
-		end,
-		ft = { "go", "gomod" },
-		build = ':lua require("go.install").update_all_sync()',
-	},
-
-	-- 기타 유틸리티
 	{ "mattn/emmet-vim" },
 	{ "cdelledonne/vim-cmake" },
 	{
@@ -661,38 +573,31 @@ require("lazy").setup({
 					NOTE = { icon = "", color = "hint", alt = { "INFO" } },
 				},
 			})
-			vim.keymap.set(
-				"n",
-				"<leader>fT",
-				"<cmd>TodoTelescope<cr>",
-				{ noremap = true, silent = true, desc = "Search TODOs" }
-			)
-		end,
-	},
-	{
-		"dstein64/nvim-scrollview",
-		config = function()
-			require("scrollview").setup({
-				excluded_filetypes = { "NvimTree", "toggleterm", "help" },
-				current_only = true,
-				base = "right",
-				column = 1,
-				signs_on_startup = { "diagnostics", "search", "marks" },
-				diagnostics_severities = {
-					vim.diagnostic.severity.ERROR,
-					vim.diagnostic.severity.WARN,
-					vim.diagnostic.severity.INFO,
-					vim.diagnostic.severity.HINT,
-				},
-			})
 		end,
 	},
 })
 
--- LSP 설정 (Packer 외부 설정 유지)
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
+-- =============================================================================
+-- LSP 설정
+-- =============================================================================
+local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
+local function on_attach(client, bufnr)
+	-- navic 연결
+	if client.server_capabilities.documentSymbolProvider then
+		require("nvim-navic").attach(client, bufnr)
+	end
+
+	-- 기본 키맵핑
+	vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr })
+	vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = bufnr })
+	vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = bufnr })
+	vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr })
+	vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = bufnr })
+	vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = bufnr })
+end
+
+-- TypeScript
 require("lspconfig").ts_ls.setup({
 	capabilities = capabilities,
 	root_dir = require("lspconfig").util.root_pattern("package.json", "tsconfig.json"),
@@ -718,19 +623,10 @@ require("lspconfig").ts_ls.setup({
 			vim.lsp.diagnostic.on_publish_diagnostics(_, params, _, config)
 		end,
 	},
-	on_attach = function(client, bufnr)
-		if client.server_capabilities.documentSymbolProvider then
-			require("nvim-navic").attach(client, bufnr)
-		end
-		vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr })
-		vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = bufnr })
-		vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = bufnr })
-		vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr })
-		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = bufnr })
-		vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = bufnr })
-	end,
+	on_attach = on_attach,
 })
 
+-- TailwindCSS
 require("lspconfig").tailwindcss.setup({
 	capabilities = capabilities,
 	root_dir = require("lspconfig").util.root_pattern(
@@ -760,9 +656,10 @@ require("lspconfig").tailwindcss.setup({
 			},
 		},
 	},
+	on_attach = on_attach,
 })
 
--- Python LSP 설정
+-- Python
 require("lspconfig").pyright.setup({
 	capabilities = capabilities,
 	settings = {
@@ -771,34 +668,19 @@ require("lspconfig").pyright.setup({
 				autoSearchPaths = true,
 				diagnosticMode = "openFilesOnly",
 				useLibraryCodeForTypes = true,
-				ignore = {
-					"layer/python/*",
-				},
+				ignore = { "layer/python/*" },
 			},
 		},
 	},
-	on_attach = function(client, bufnr)
-		if client.server_capabilities.documentSymbolProvider then
-			require("nvim-navic").attach(client, bufnr)
-		end
-		vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr })
-		vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = bufnr })
-		vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = bufnr })
-		vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr })
-		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = bufnr })
-		vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = bufnr })
-	end,
+	on_attach = on_attach,
 })
 
--- Go LSP 설정
+-- Go
 require("lspconfig").gopls.setup({
 	capabilities = capabilities,
 	settings = {
 		gopls = {
-			analyses = {
-				unusedparams = true,
-				shadow = true,
-			},
+			analyses = { unusedparams = true, shadow = true },
 			staticcheck = true,
 			gofumpt = true,
 			usePlaceholders = true,
@@ -807,19 +689,8 @@ require("lspconfig").gopls.setup({
 		},
 	},
 	on_attach = function(client, bufnr)
-		if client.server_capabilities.documentSymbolProvider then
-			require("nvim-navic").attach(client, bufnr)
-		end
-
-		-- 기본 키 매핑
-		vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr })
-		vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = bufnr })
-		vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = bufnr })
-		vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr })
-		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = bufnr })
-		vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = bufnr })
-
-		-- Go 전용 키 매핑
+		on_attach(client, bufnr)
+		-- Go 전용 키맵
 		vim.keymap.set(
 			"n",
 			"<leader>gtf",
@@ -835,7 +706,55 @@ require("lspconfig").gopls.setup({
 	end,
 })
 
--- 자동 완성 설정
+-- Rust
+require("lspconfig").rust_analyzer.setup({
+	capabilities = capabilities,
+	on_attach = function(client, bufnr)
+		on_attach(client, bufnr)
+		-- Rust 전용 키맵
+		vim.keymap.set("n", "<leader>rh", function()
+			local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
+			vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
+		end, { buffer = bufnr, desc = "Toggle Inlay Hints" })
+		vim.keymap.set(
+			"n",
+			"<leader>rr",
+			"<cmd>lua vim.lsp.buf.code_action()<CR>",
+			{ buffer = bufnr, desc = "Rust run" }
+		)
+		vim.keymap.set(
+			"n",
+			"<leader>rt",
+			"<cmd>lua vim.lsp.buf.code_action()<CR>",
+			{ buffer = bufnr, desc = "Rust test" }
+		)
+		vim.keymap.set(
+			"n",
+			"<leader>rd",
+			"<cmd>lua vim.lsp.buf.code_action()<CR>",
+			{ buffer = bufnr, desc = "Rust debug" }
+		)
+	end,
+	settings = {
+		["rust-analyzer"] = {
+			checkOnSave = { command = "clippy", extraArgs = { "--all-targets", "--all-features" } },
+			inlayHints = {
+				enable = true,
+				showParameterNames = true,
+				parameterHintsPrefix = "<- ",
+				otherHintsPrefix = "=> ",
+			},
+			diagnostics = { enable = true, experimental = { enable = true } },
+			completion = { addCallArgumentSnippets = true, addCallParenthesis = true },
+			cargo = { allFeatures = true, loadOutDirsFromCheck = true, runBuildScripts = true },
+			procMacro = { enable = true },
+		},
+	},
+})
+
+-- =============================================================================
+-- 자동완성 설정 (nvim-cmp)
+-- =============================================================================
 local cmp = require("cmp")
 cmp.setup({
 	mapping = cmp.mapping.preset.insert({
@@ -845,52 +764,66 @@ cmp.setup({
 		["<C-e>"] = cmp.mapping.abort(),
 		["<CR>"] = cmp.mapping.confirm({ select = true }),
 	}),
-	sources = {
-		{ name = "nvim_lsp" },
-		{ name = "buffer" },
-		{ name = "path" },
-	},
+	sources = { { name = "nvim_lsp" }, { name = "buffer" }, { name = "path" } },
 })
 
--- Python 디버깅 설정
+-- =============================================================================
+-- 디버거 설정 (nvim-dap)
+-- =============================================================================
 require("dap-python").setup("~/.virtualenvs/debugpy/bin/python")
 
--- Nvim-tree 키 매핑
-local tree = require("nvim-tree.api")
-vim.keymap.set("n", "<leader>ft", tree.tree.toggle, { noremap = true, silent = true, desc = "Toggle file explorer" })
-
--- Telescope 키 매핑
-local builtin = require("telescope.builtin")
-vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Find files" })
-vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Search text (live grep)" })
-vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "List open buffers" })
-vim.keymap.set("n", "<leader>fh", builtin.help_tags, { desc = "Search help tags" })
-vim.keymap.set("n", "<leader>fc", builtin.lsp_document_symbols, { desc = "Search document symbols" })
-vim.keymap.set("n", "<leader>fC", builtin.lsp_workspace_symbols, { desc = "Search workspace symbols" })
-vim.keymap.set("n", "<leader>fr", builtin.lsp_references, { desc = "Find references" })
-vim.keymap.set("n", "<leader>fw", builtin.grep_string, { desc = "Search current word" })
-vim.keymap.set("n", "<leader>fn", ":Telescope neoclip<CR>", { noremap = true, desc = "Show clipboard history" })
-
--- null-ls 대신 nvim-lint 및 conform.nvim 설정
--- 1. 린팅 설정 (nvim-lint)
-require("lint").linters_by_ft = {
-	javascript = { "eslint" },
-	typescript = { "eslint" },
-	typescriptreact = { "eslint" },
-	javascriptreact = { "eslint" },
-	python = { "ruff" },
-	go = { "golangcilint" },
+local dap = require("dap")
+dap.adapters.codelldb = {
+	type = "server",
+	port = "${port}",
+	executable = {
+		command = vim.fn.stdpath("data") .. "/mason/bin/codelldb",
+		args = { "--port", "${port}" },
+	},
+}
+dap.configurations.rust = {
+	{
+		name = "Launch",
+		type = "codelldb",
+		request = "launch",
+		program = function()
+			return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
+		end,
+		cwd = "${workspaceFolder}",
+		stopOnEntry = false,
+		args = {},
+	},
+	{
+		name = "Launch (with args)",
+		type = "codelldb",
+		request = "launch",
+		program = function()
+			return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
+		end,
+		cwd = "${workspaceFolder}",
+		stopOnEntry = false,
+		args = function()
+			local args_string = vim.fn.input("Arguments: ")
+			return vim.split(args_string, " ")
+		end,
+	},
 }
 
--- 파일 저장 시 린팅 실행
-vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
-	callback = function()
-		require("lint").try_lint()
-		vim.diagnostic.show()
-	end,
-})
+-- =============================================================================
+-- 린터 및 포맷터 설정 (nvim-lint & conform.nvim)
+-- =============================================================================
+-- 린팅
+require("lint").linters_by_ft = {
+	javascript = { "eslint_d" },
+	typescript = { "eslint_d" },
+	typescriptreact = { "eslint_d" },
+	javascriptreact = { "eslint_d" },
+	python = { "ruff" },
+	go = { "golangcilint" },
+	rust = { "clippy" },
+}
 
--- ESLint 관련 조건부 설정
+-- ESLint 조건부 설정
 vim.api.nvim_create_autocmd({ "FileType" }, {
 	pattern = { "javascript", "typescript", "typescriptreact", "javascriptreact" },
 	callback = function()
@@ -912,6 +845,7 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
 	end,
 })
 
+-- 커스텀 golangci-lint 설정
 require("lint").linters.golangcilint = {
 	cmd = "golangci-lint",
 	stdin = false,
@@ -938,7 +872,7 @@ require("lint").linters.golangcilint = {
 					col = issue.Pos.Column - 1,
 					end_lnum = issue.Pos.Line - 1,
 					end_col = issue.Pos.Column - 1,
-					severity = 1, -- Error
+					severity = 1,
 					message = issue.Text,
 					source = issue.FromLinter,
 				})
@@ -948,7 +882,14 @@ require("lint").linters.golangcilint = {
 	end,
 }
 
--- 2. 포맷팅 설정 (conform.nvim)
+vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
+	callback = function()
+		require("lint").try_lint()
+		vim.diagnostic.show()
+	end,
+})
+
+-- 포맷팅
 require("conform").setup({
 	formatters_by_ft = {
 		javascript = { "prettier" },
@@ -962,30 +903,31 @@ require("conform").setup({
 		python = { "black", "isort" },
 		lua = { "stylua" },
 		go = { "gofumpt", "goimports" },
+		rust = { "rustfmt" },
 	},
-	format_on_save = {
-		timeout_ms = 3000,
-		lsp_fallback = true,
-	},
+	format_on_save = { timeout_ms = 3000, lsp_fallback = true },
 	formatters = {
 		prettier = {
-			env = {
-				PRETTIERD_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/prettierrc.json"),
-			},
+			env = { PRETTIERD_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/prettierrc.json") },
 			condition = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
-
 				local has_prettier = vim.fn.filereadable(root_dir .. "/.prettierrc") == 1
 					or vim.fn.filereadable(root_dir .. "/.prettierrc.json") == 1
 					or vim.fn.filereadable(root_dir .. "/.prettierrc.js") == 1
 					or vim.fn.filereadable(root_dir .. "/.prettierrc.yml") == 1
 					or vim.fn.filereadable(root_dir .. "/prettier.config.js") == 1
 				local is_cdk = vim.fn.filereadable(root_dir .. "/cdk.json") == 1
+
+				-- markdown은 항상 포맷팅 허용 (조건 무시)
+				local filetype = vim.bo.filetype
+				if filetype == "markdown" then
+					return true
+				end
+
 				return has_prettier or is_cdk
 			end,
 			prepend_args = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
-
 				local is_frontend = vim.fn.filereadable(root_dir .. "/tailwind.config.js") == 1
 					or vim.fn.filereadable(root_dir .. "/tailwind.config.ts") == 1
 				if is_frontend then
@@ -998,7 +940,6 @@ require("conform").setup({
 			prepend_args = { "--line-length", "88", "--preview", "--enable-unstable-feature", "string_processing" },
 			condition = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
-				-- has_file_in_project 함수를 직접 호출하지 않고 내부 로직 사용
 				for _, file in ipairs({
 					"pyproject.toml",
 					"setup.py",
@@ -1018,7 +959,6 @@ require("conform").setup({
 			prepend_args = { "--profile", "black" },
 			condition = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
-				-- has_file_in_project 함수를 직접 호출하지 않고 내부 로직 사용
 				for _, file in ipairs({
 					"pyproject.toml",
 					"setup.py",
@@ -1037,42 +977,310 @@ require("conform").setup({
 	},
 })
 
--- 진단 표시 설정
-vim.diagnostic.config({
-	virtual_text = { prefix = "●", source = "always", spacing = 4 },
-	float = { source = "always", border = "rounded", header = "", prefix = "" },
-	signs = {
-		text = {
-			[vim.diagnostic.severity.ERROR] = "󰅚",
-			[vim.diagnostic.severity.WARN] = "󰀦",
-			[vim.diagnostic.severity.INFO] = "󰋼",
-			[vim.diagnostic.severity.HINT] = "󰌶",
-		},
-	},
-	underline = true,
-	severity_sort = true,
+-- =============================================================================
+-- 자동 명령 (Autocmds)
+-- =============================================================================
+-- 언어별 파일 형식 설정
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "python",
+	command = "setlocal tabstop=4 shiftwidth=4 expandtab",
+})
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "go",
+	command = "setlocal tabstop=4 shiftwidth=4 noexpandtab",
 })
 
--- 탭 설정
-vim.o.tabstop = 2
-vim.o.shiftwidth = 2
-vim.o.expandtab = false
-vim.cmd([[autocmd FileType python setlocal tabstop=4 shiftwidth=4 expandtab]])
-vim.cmd([[autocmd FileType go setlocal tabstop=4 shiftwidth=4 noexpandtab]])
+-- Rust 설정 (통합)
+local rust_augroup = vim.api.nvim_create_augroup("RustConfig", { clear = true })
+vim.api.nvim_create_autocmd("BufWritePre", {
+	group = rust_augroup,
+	pattern = "*.rs",
+	callback = function()
+		vim.lsp.buf.format({ async = false })
+	end,
+})
+vim.api.nvim_create_autocmd("FileType", {
+	group = rust_augroup,
+	pattern = "rust",
+	callback = function()
+		vim.opt_local.tabstop = 4
+		vim.opt_local.shiftwidth = 4
+		vim.opt_local.expandtab = true
+		vim.opt_local.textwidth = 100
+		vim.opt_local.colorcolumn = "100"
+		if vim.fn.line("$") > 5000 then
+			vim.cmd("TSBufDisable highlight")
+			vim.notify("Large Rust file detected, disabling TreeSitter highlights for performance")
+		end
+		vim.lsp.set_log_level("WARN")
+	end,
+})
+vim.api.nvim_create_autocmd("FileType", {
+	group = rust_augroup,
+	pattern = "toml",
+	callback = function()
+		vim.opt_local.tabstop = 2
+		vim.opt_local.shiftwidth = 2
+		vim.opt_local.expandtab = true
+	end,
+})
 
--- Winbar 설정
-vim.api.nvim_set_hl(0, "Winbar", { bg = "#1a1b26", fg = "#a9b1d6", bold = true, italic = false })
-vim.api.nvim_set_hl(0, "NavicText", { fg = "#a9b1d6", bg = "#1a1b26" })
-vim.api.nvim_set_hl(0, "NavicSeparator", { fg = "#565f89", bg = "#1a1b26" })
-vim.o.winbar = "%#Winbar#%{%v:lua.require'nvim-navic'.get_location()%}"
+-- Go 설정 (통합)
+local go_augroup = vim.api.nvim_create_augroup("GoFormat", { clear = true })
+vim.api.nvim_create_autocmd("BufWritePre", {
+	group = go_augroup,
+	pattern = "*.go",
+	callback = function()
+		require("go.format").goimport()
+	end,
+})
 
--- 에러 탐색 키맵
-vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Go to the previous error" })
-vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Go to the next error" })
-vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "See error details" })
-vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "See error list" })
+-- 터미널 설정
+vim.api.nvim_create_autocmd("TermOpen", {
+	pattern = "term://*",
+	callback = function()
+		local opts = { buffer = 0 }
+		vim.keymap.set("t", "<esc><esc>", [[<C-\><C-n>]], opts)
+		vim.keymap.set("t", "<C-h>", [[<Cmd>wincmd h<CR>]], opts)
+		vim.keymap.set("t", "<C-j>", [[<Cmd>wincmd j<CR>]], opts)
+		vim.keymap.set("t", "<C-k>", [[<Cmd>wincmd k<CR>]], opts)
+		vim.keymap.set("t", "<C-l>", [[<Cmd>wincmd l<CR>]], opts)
+	end,
+})
 
--- hlslens 키 매핑
+-- 성능 최적화
+vim.api.nvim_create_autocmd("BufReadPre", {
+	callback = function()
+		local file_size = vim.fn.getfsize(vim.fn.expand("%"))
+		if file_size > 1024 * 1024 then -- 1MB 이상
+			vim.cmd("syntax off")
+			vim.cmd("TSBufDisable highlight")
+			vim.notify("Large file detected, disabling syntax for performance")
+		end
+	end,
+})
+
+-- config 파일 최적화
+vim.api.nvim_create_autocmd("BufReadPre", {
+	pattern = vim.fn.stdpath("config") .. "/init.lua",
+	callback = function()
+		vim.cmd("LspStop")
+		vim.cmd("TSBufDisable highlight")
+		vim.notify("Config file opened with limited features to prevent freezing")
+	end,
+})
+
+-- 포맷터 미리 초기화
+vim.api.nvim_create_autocmd("VimEnter", {
+	callback = function()
+		vim.defer_fn(function()
+			-- 비동기로 포맷터들 초기화
+			vim.fn.jobstart("black --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
+			vim.fn.jobstart("isort --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
+			vim.fn.jobstart("prettier --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
+			vim.fn.jobstart("eslint --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
+			vim.fn.jobstart("ruff --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
+			vim.notify("Formatters initialized", vim.log.levels.INFO)
+		end, 1000)
+	end,
+	once = true,
+})
+
+-- =============================================================================
+-- 사용자 정의 커맨드
+-- =============================================================================
+vim.api.nvim_create_user_command("RustNewProject", function(opts)
+	local project_name = opts.args
+	if project_name == "" then
+		project_name = vim.fn.input("Project name: ")
+	end
+	if project_name == "" then
+		return
+	end
+	local cmd = string.format("cargo new %s", project_name)
+	vim.fn.system(cmd)
+	vim.cmd(string.format("cd %s", project_name))
+	vim.cmd("e Cargo.toml")
+	vim.notify(string.format("Created new Rust project: %s", project_name))
+end, { nargs = "?" })
+
+-- =============================================================================
+-- 키 매핑 (Keymaps)
+-- =============================================================================
+-- 파일 탐색
+local tree = require("nvim-tree.api")
+vim.keymap.set("n", "<leader>ft", tree.tree.toggle, { desc = "Toggle File Explorer" })
+
+-- Telescope
+local builtin = require("telescope.builtin")
+vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Find files" })
+vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Search text (live grep)" })
+vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "List open buffers" })
+vim.keymap.set("n", "<leader>fh", builtin.help_tags, { desc = "Search help tags" })
+vim.keymap.set("n", "<leader>fc", builtin.lsp_document_symbols, { desc = "Search document symbols" })
+vim.keymap.set("n", "<leader>fC", builtin.lsp_workspace_symbols, { desc = "Search workspace symbols" })
+vim.keymap.set("n", "<leader>fr", builtin.lsp_references, { desc = "Find references" })
+vim.keymap.set("n", "<leader>fw", builtin.grep_string, { desc = "Search current word" })
+vim.keymap.set("n", "<leader>fn", ":Telescope neoclip<CR>", { desc = "Show clipboard history" })
+vim.keymap.set("n", "<leader>fT", "<cmd>TodoTelescope<cr>", { desc = "Search TODOs" })
+
+-- Telescope 확장 로드
+require("telescope").load_extension("neoclip")
+
+-- Rust 프로젝트 관련 검색
+vim.keymap.set("n", "<leader>rc", function()
+	builtin.find_files({
+		prompt_title = "Find Cargo.toml",
+		search_file = "Cargo.toml",
+		cwd = vim.fn.getcwd(),
+	})
+end, { desc = "Find Cargo.toml" })
+vim.keymap.set("n", "<leader>rs", function()
+	builtin.live_grep({
+		prompt_title = "Search in Rust files",
+		type_filter = "rust",
+	})
+end, { desc = "Search in Rust files" })
+
+-- Harpoon
+local harpoon = require("harpoon")
+vim.keymap.set("n", "<leader>ha", function()
+	harpoon:list():add()
+end, { desc = "Harpoon Add" })
+vim.keymap.set("n", "<leader>hm", function()
+	harpoon.ui:toggle_quick_menu(harpoon:list())
+end, { desc = "Harpoon Menu" })
+vim.keymap.set("n", "<leader>h1", function()
+	harpoon:list():select(1)
+end, { desc = "Go to Harpoon file 1" })
+vim.keymap.set("n", "<leader>h2", function()
+	harpoon:list():select(2)
+end, { desc = "Go to Harpoon file 2" })
+vim.keymap.set("n", "<leader>h3", function()
+	harpoon:list():select(3)
+end, { desc = "Go to Harpoon file 3" })
+vim.keymap.set("n", "<leader>h4", function()
+	harpoon:list():select(4)
+end, { desc = "Go to Harpoon file 4" })
+vim.keymap.set("n", "<leader>hp", function()
+	harpoon:list():prev()
+end, { desc = "Previous Harpoon file" })
+vim.keymap.set("n", "<leader>hn", function()
+	harpoon:list():next()
+end, { desc = "Next Harpoon file" })
+
+-- Harpoon 확장 설정
+harpoon:extend({
+	UI_CREATE = function(cx)
+		vim.keymap.set("n", "<C-v>", function()
+			harpoon.ui:select_menu_item({ vsplit = true })
+		end, { buffer = cx.bufnr })
+		vim.keymap.set("n", "<C-x>", function()
+			harpoon.ui:select_menu_item({ split = true })
+		end, { buffer = cx.bufnr })
+		vim.keymap.set("n", "<C-t>", function()
+			harpoon.ui:select_menu_item({ tabedit = true })
+		end, { buffer = cx.bufnr })
+	end,
+})
+
+-- Cargo 명령어
+local Terminal = require("toggleterm.terminal").Terminal
+local function run_cargo_cmd(cmd, opts)
+	opts = opts or {}
+	local term = Terminal:new({
+		cmd = cmd,
+		direction = opts.direction or "float",
+		close_on_exit = opts.close_on_exit or false,
+		auto_scroll = true,
+	})
+	term:toggle()
+end
+
+vim.keymap.set("n", "<leader>cr", function()
+	run_cargo_cmd("cargo run")
+end, { desc = "Cargo Run" })
+vim.keymap.set("n", "<leader>ct", function()
+	run_cargo_cmd("cargo test")
+end, { desc = "Cargo Test" })
+vim.keymap.set("n", "<leader>cc", function()
+	run_cargo_cmd("cargo check")
+end, { desc = "Cargo Check" })
+vim.keymap.set("n", "<leader>cb", function()
+	run_cargo_cmd("cargo build")
+end, { desc = "Cargo Build" })
+vim.keymap.set("n", "<leader>cC", function()
+	run_cargo_cmd("cargo clippy")
+end, { desc = "Cargo Clippy" })
+vim.keymap.set("n", "<leader>cw", function()
+	run_cargo_cmd("cargo watch -x check")
+end, { desc = "Cargo Watch" })
+vim.keymap.set("n", "<leader>cf", function()
+	run_cargo_cmd("cargo fmt")
+end, { desc = "Cargo Format" })
+vim.keymap.set("n", "<leader>cd", function()
+	run_cargo_cmd("cargo doc --open")
+end, { desc = "Cargo Doc" })
+
+-- 인터랙티브 Cargo 명령어
+vim.keymap.set("n", "<leader>cR", function()
+	local args = vim.fn.input("cargo run arguments: ")
+	local cmd = args ~= "" and "cargo run " .. args or "cargo run"
+	run_cargo_cmd(cmd)
+end, { desc = "Cargo Run with args" })
+vim.keymap.set("n", "<leader>cT", function()
+	local test_name = vim.fn.input("Test name (optional): ")
+	local cmd = test_name ~= "" and "cargo test " .. test_name or "cargo test"
+	run_cargo_cmd(cmd)
+end, { desc = "Cargo Test specific" })
+
+-- 터미널 방향별 실행
+vim.keymap.set("n", "<leader>crh", function()
+	run_cargo_cmd("cargo run", { direction = "horizontal" })
+end, { desc = "Cargo Run (horizontal)" })
+vim.keymap.set("n", "<leader>crv", function()
+	run_cargo_cmd("cargo run", { direction = "vertical" })
+end, { desc = "Cargo Run (vertical)" })
+
+-- Bufferline
+vim.keymap.set("n", "<Tab>", "<Cmd>BufferLineCycleNext<CR>")
+vim.keymap.set("n", "<S-Tab>", "<Cmd>BufferLineCyclePrev<CR>")
+vim.keymap.set("n", "<leader>bc", "<Cmd>BufferLinePickClose<CR>", { desc = "Pick buffer to close" })
+vim.keymap.set("n", "<leader>bx", "<Cmd>BufferLineCloseLeft<CR>", { desc = "Close all buffers to the left" })
+vim.keymap.set("n", "<leader>bX", "<Cmd>BufferLineCloseRight<CR>", { desc = "Close all buffers to the right" })
+vim.keymap.set("n", "<leader>bo", "<Cmd>BufferLineCloseOthers<CR>", { desc = "Close all other buffers" })
+vim.keymap.set("n", "<leader>bp", "<Cmd>BufferLinePick<CR>", { desc = "Pick buffer" })
+vim.keymap.set("n", "<leader>bs", "<Cmd>BufferLineSortByDirectory<CR>", { desc = "Sort buffers by directory" })
+
+-- 진단 (Diagnostics)
+vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous Diagnostic" })
+vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next Diagnostic" })
+vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show Diagnostic" })
+vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Diagnostic List" })
+
+-- Trouble
+vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Document Diagnostics" })
+vim.keymap.set("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", { desc = "Buffer Diagnostics" })
+vim.keymap.set("n", "<leader>cs", "<cmd>Trouble symbols toggle focus=false<cr>", { desc = "Symbols" })
+vim.keymap.set("n", "<leader>cl", "<cmd>Trouble lsp toggle focus=false win.position=right<cr>", { desc = "LSP" })
+vim.keymap.set("n", "<leader>xL", "<cmd>Trouble loclist toggle<cr>", { desc = "Location List" })
+vim.keymap.set("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List" })
+
+-- Flash
+vim.keymap.set({ "n", "x", "o" }, "s", function()
+	require("flash").jump()
+end)
+vim.keymap.set({ "n", "x", "o" }, "<leader>fs", function()
+	require("flash").treesitter()
+end, { desc = "Search Flash Treesitter" })
+vim.keymap.set("o", "r", function()
+	require("flash").remote()
+end)
+vim.keymap.set({ "o", "x" }, "R", function()
+	require("flash").treesitter_search()
+end)
+
+-- hlslens
 local kopts = { noremap = true, silent = true }
 vim.api.nvim_set_keymap(
 	"n",
@@ -1091,34 +1299,72 @@ vim.api.nvim_set_keymap("n", "#", [[#<Cmd>lua require('hlslens').start()<CR>]], 
 vim.api.nvim_set_keymap("n", "g*", [[g*<Cmd>lua require('hlslens').start()<CR>]], kopts)
 vim.api.nvim_set_keymap("n", "g#", [[g#<Cmd>lua require('hlslens').start()<CR>]], kopts)
 
--- Trouble 키매핑
-vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Document Diagnostics" })
-vim.keymap.set("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", { desc = "Buffer Diagnostics" })
-vim.keymap.set("n", "<leader>cs", "<cmd>Trouble symbols toggle focus=false<cr>", { desc = "Symbols" })
-vim.keymap.set("n", "<leader>cl", "<cmd>Trouble lsp toggle focus=false win.position=right<cr>", { desc = "LSP" })
-vim.keymap.set("n", "<leader>xL", "<cmd>Trouble loclist toggle<cr>", { desc = "Location List" })
-vim.keymap.set("n", "<leader>xQ", "<cmd>Trouble qflist toggle<cr>", { desc = "Quickfix List" })
-
 -- 검색 하이라이트 지우기
 vim.api.nvim_set_keymap("n", "<Esc><Esc>", "<Cmd>noh<CR>", kopts)
 
--- neoscroll 설정
-require("neoscroll").setup({
-	mappings = { "<C-u>", "<C-d>", "<C-b>", "<C-f>", "<C-y>", "<C-e>", "zt", "zz", "zb" },
-	hide_cursor = true,
-	stop_eof = true,
-	respect_scrolloff = true,
-	cursor_scrolls_alone = true,
+-- Noice
+vim.keymap.set("n", "<leader>nl", function()
+	require("noice").cmd("last")
+end, { desc = "Noice Last Message" })
+vim.keymap.set("n", "<leader>nh", function()
+	require("noice").cmd("history")
+end, { desc = "Noice History" })
+vim.keymap.set({ "n", "i", "s" }, "<c-f>", function()
+	if not require("noice.lsp").scroll(4) then
+		return "<c-f>"
+	end
+end, { silent = true, expr = true })
+vim.keymap.set({ "n", "i", "s" }, "<c-b>", function()
+	if not require("noice.lsp").scroll(-4) then
+		return "<c-b>"
+	end
+end, { silent = true, expr = true })
+
+-- 기타
+vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle!<CR>", { desc = "Aerial Toggle" })
+vim.keymap.set("n", "<leader>sv", function()
+	require("swenv.api").pick_venv()
+end, { desc = "Select virtual environment" })
+
+-- which-key 등록 (새로운 spec 형식)
+require("which-key").add({
+	-- 그룹 정의
+	{ "<leader>r", group = "Rust" },
+	{ "<leader>c", group = "Cargo" },
+	{ "<leader>h", group = "Harpoon" },
+	{ "<leader>f", group = "Find" },
+	{ "<leader>b", group = "Buffer" },
+	{ "<leader>x", group = "Trouble" },
+	{ "<leader>g", group = "Go" },
+	{ "<leader>n", group = "Noice" },
 })
 
--- illuminate 설정
-require("illuminate").configure({
-	providers = { "lsp", "treesitter", "regex" },
-	delay = 100,
-	filetypes_denylist = { "dirvish", "fugitive", "NvimTree" },
+-- =============================================================================
+-- UI 및 기타 설정
+-- =============================================================================
+-- Winbar
+vim.api.nvim_set_hl(0, "Winbar", { bg = "#1a1b26", fg = "#a9b1d6", bold = true, italic = false })
+vim.api.nvim_set_hl(0, "NavicText", { fg = "#a9b1d6", bg = "#1a1b26" })
+vim.api.nvim_set_hl(0, "NavicSeparator", { fg = "#565f89", bg = "#1a1b26" })
+vim.o.winbar = "%#Winbar#%{%v:lua.require'nvim-navic'.get_location()%}"
+
+-- 진단 표시 설정
+vim.diagnostic.config({
+	virtual_text = { prefix = "●", source = "always", spacing = 4 },
+	float = { source = "always", border = "rounded", header = "", prefix = "" },
+	signs = {
+		text = {
+			[vim.diagnostic.severity.ERROR] = "󰅚",
+			[vim.diagnostic.severity.WARN] = "󰀦",
+			[vim.diagnostic.severity.INFO] = "󰋼",
+			[vim.diagnostic.severity.HINT] = "󰌶",
+		},
+	},
+	underline = true,
+	severity_sort = true,
 })
 
--- markdown preview 설정
+-- Markdown preview 설정
 vim.g.mkdp_auto_start = 0
 vim.g.mkdp_auto_close = 1
 vim.g.mkdp_refresh_slow = 0
@@ -1128,80 +1374,5 @@ vim.g.mkdp_browser = ""
 vim.g.mkdp_echo_preview_url = 0
 vim.g.mkdp_page_title = "${name}"
 
--- init.lua 파일 편집 시 성능 최적화
-vim.api.nvim_create_autocmd("BufReadPre", {
-	pattern = vim.fn.stdpath("config") .. "/init.lua",
-	callback = function()
-		vim.cmd("LspStop")
-		vim.cmd("TSBufDisable highlight")
-		vim.notify("Config file opened with limited features to prevent freezing")
-	end,
-})
-
--- LSP 진단 표시 기능 설정
-if vim.diagnostic and vim.diagnostic.config then
-	vim.diagnostic.config({
-		virtual_text = { prefix = "●", source = "always", spacing = 4 },
-		float = { source = "always", border = "rounded", header = "", prefix = "" },
-		signs = true,
-		underline = true,
-		severity_sort = true,
-	})
-end
-
--- Python 관련 파일 형식 인식을 위한 설정
-vim.filetype.add({
-	extension = {
-		py = "python",
-	},
-})
-
--- 저장 시 자동 포맷팅을 위한 명시적 autocmd
-vim.api.nvim_create_autocmd("BufWritePre", {
-	callback = function(args)
-		require("conform").format({ bufnr = args.buf })
-	end,
-})
-
-vim.api.nvim_create_autocmd("VimEnter", {
-	callback = function()
-		-- Neovim 시작 완료 후 비동기적으로 포맷터 초기화
-		vim.defer_fn(function()
-			-- Python 포맷터
-			vim.fn.jobstart("black --version", {
-				detach = true,
-				stderr_buffered = true,
-				stdout_buffered = true,
-			})
-
-			vim.fn.jobstart("isort --version", {
-				detach = true,
-				stderr_buffered = true,
-				stdout_buffered = true,
-			})
-
-			-- JavaScript/TypeScript 포맷터
-			vim.fn.jobstart("prettier --version", {
-				detach = true,
-				stderr_buffered = true,
-				stdout_buffered = true,
-			})
-
-			-- 린터도 미리 초기화
-			vim.fn.jobstart("eslint --version", {
-				detach = true,
-				stderr_buffered = true,
-				stdout_buffered = true,
-			})
-
-			vim.fn.jobstart("ruff --version", {
-				detach = true,
-				stderr_buffered = true,
-				stdout_buffered = true,
-			})
-
-			vim.notify("Formatter initialized", vim.log.levels.INFO)
-		end, 1000) -- 1초 후 실행
-	end,
-	once = true, -- 한 번만 실행
-})
+-- Python 파일형식 인식
+vim.filetype.add({ extension = { py = "python" } })
