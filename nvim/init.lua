@@ -349,7 +349,7 @@ require("lazy").setup({
 		ft = { "rust", "toml" },
 		config = function()
 			require("crates").setup({
-				src = { cmp = { enabled = true } },
+				completion = { cmp = { enabled = true } },
 			})
 		end,
 	},

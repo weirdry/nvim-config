@@ -6,3 +6,5 @@ nvim/nvim
 # OS
 .DS_Store
 
+# etc.
+CLAUDE.md
