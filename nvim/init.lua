@@ -716,12 +716,7 @@ require("lspconfig").rust_analyzer.setup({
 			local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
 			vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
 		end, { buffer = bufnr, desc = "Toggle Inlay Hints" })
-		vim.keymap.set(
-			"n",
-			"<leader>rr",
-			"<cmd>lua vim.lsp.buf.code_action()<CR>",
-			{ buffer = bufnr, desc = "Rust run" }
-		)
+		vim.keymap.set("n", "<leader>rr", ":LspRestart<CR>", { buffer = bufnr, desc = "LSP Restart" })
 		vim.keymap.set(
 			"n",
 			"<leader>rt",
