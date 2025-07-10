@@ -637,11 +637,12 @@ require("lspconfig").tailwindcss.setup({
 	),
 	settings = {
 		tailwindCSS = {
-			classAttributes = { "cn", "class", "className", "classList", "ngClass", "wrapperClassName" },
+			classAttributes = { "cn", "class", "className", ".*ClassName" }, -- matches VS Code
 			experimental = {
 				classRegex = {
-					"className[\\s]*=[\\s]*[\\{][\\s]*[\"'`]([^\"'`]*)[\"'`][\\s]*[\\}]",
-					"cn\\(['\"](.*?)['\"]\\)",
+					-- Matches VS Code patterns exactly
+					"className:\\s*['\"`]([^'\"`]*)['\"`]",
+					"cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"
 				},
 			},
 			validate = true,
@@ -658,6 +659,9 @@ require("lspconfig").tailwindcss.setup({
 	},
 	on_attach = on_attach,
 })
+
+-- ESLint LSP disabled - using eslint_d via nvim-lint instead
+-- This avoids "Unable to find ESLint library" errors
 
 -- Python
 require("lspconfig").pyright.setup({
@@ -877,6 +881,43 @@ require("lint").linters.golangcilint = {
 	end,
 }
 
+-- ESLint auto-fix on save using eslint_d (matches VS Code "source.fixAll.eslint": "explicit")
+vim.api.nvim_create_autocmd("BufWritePost", {
+	pattern = { "*.js", "*.jsx", "*.ts", "*.tsx" },
+	callback = function()
+		-- Check for ESLint config in project
+		local root = vim.fn.getcwd()
+		local has_eslint_config = vim.fn.filereadable(root .. "/eslint.config.js") == 1
+			or vim.fn.filereadable(root .. "/eslint.config.mjs") == 1
+			or vim.fn.filereadable(root .. "/eslint.config.cjs") == 1
+			or vim.fn.filereadable(root .. "/.eslintrc") == 1 
+			or vim.fn.filereadable(root .. "/.eslintrc.js") == 1
+			or vim.fn.filereadable(root .. "/.eslintrc.json") == 1
+		
+		if not has_eslint_config then
+			return -- No ESLint config, skip auto-fix
+		end
+
+		-- Use eslint_d directly for auto-fix
+		local filename = vim.fn.expand("%:p")
+		if filename and filename ~= "" then
+			vim.fn.jobstart({
+				"eslint_d",
+				"--fix", 
+				filename
+			}, {
+				on_exit = function(_, exit_code)
+					-- Only reload if eslint_d made changes
+					vim.schedule(function()
+						-- Use edit! for faster reload
+						vim.cmd("silent! edit!")
+					end)
+				end
+			})
+		end
+	end,
+})
+
 vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
 	callback = function()
 		require("lint").try_lint()
@@ -1062,6 +1103,58 @@ vim.api.nvim_create_autocmd("BufReadPre", {
 		vim.cmd("LspStop")
 		vim.cmd("TSBufDisable highlight")
 		vim.notify("Config file opened with limited features to prevent freezing")
+	end,
+})
+
+-- Project-specific spell check words from .vscode/settings.json
+vim.api.nvim_create_autocmd({"BufRead", "BufNewFile"}, {
+	callback = function()
+		local function find_vscode_settings()
+			local current_dir = vim.fn.expand('%:p:h')
+			while current_dir ~= '/' do
+				local vscode_file = current_dir .. '/.vscode/settings.json'
+				if vim.fn.filereadable(vscode_file) == 1 then
+					return vscode_file
+				end
+				current_dir = vim.fn.fnamemodify(current_dir, ':h')
+			end
+			return nil
+		end
+		
+		local vscode_settings = find_vscode_settings()
+		if vscode_settings then
+			local ok, content = pcall(vim.fn.readfile, vscode_settings)
+			if ok then
+				local json_str = table.concat(content, '\n')
+				-- Simple regex to extract cSpell.words array
+				local words_match = json_str:match('"cSpell%.words"%s*:%s*%[([^%]]+)%]')
+				if words_match then
+					local custom_words = {}
+					for word in words_match:gmatch('"([^"]+)"') do
+						table.insert(custom_words, word)
+					end
+					
+					if #custom_words > 0 then
+						-- Create project-specific spell file
+						local project_root = vim.fn.fnamemodify(vscode_settings, ':h:h')
+						local spell_dir = project_root .. '/.nvim/spell'
+						vim.fn.mkdir(spell_dir, 'p')
+						
+						local spell_file = spell_dir .. '/project.utf-8.add'
+						local file = io.open(spell_file, 'w')
+						if file then
+							for _, word in ipairs(custom_words) do
+								file:write(word .. '\n')
+							end
+							file:close()
+							
+							-- Set project-specific spellfile for current buffer
+							vim.opt_local.spellfile = spell_file
+						end
+					end
+				end
+			end
+		end
 	end,
 })
 

@@ -29,7 +29,8 @@ Full LSP integration via [nvim-lspconfig](https://github.com/neovim/nvim-lspconf
 - 📊 Syntax highlighting with [Treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - 📝 Intelligent auto-completion via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
 - 💅 Code formatting with [conform.nvim](https://github.com/stevearc/conform.nvim)
-- 🔬 Comprehensive linting with [nvim-lint](https://github.com/mfussenegger/nvim-lint)
+- 🔬 Fast linting with [nvim-lint](https://github.com/mfussenegger/nvim-lint) + `eslint_d` for JavaScript/TypeScript
+- ⚡ Optimized ESLint auto-fixing on save (faster than traditional LSP approach)
 - 🐛 Multi-language debugging with [nvim-dap](https://github.com/mfussenegger/nvim-dap)
 
 ### 🌟 Language-Specific Features
@@ -55,6 +56,19 @@ Full LSP integration via [nvim-lspconfig](https://github.com/neovim/nvim-lspconf
 - Full git workflow with [fugitive](https://github.com/tpope/vim-fugitive)
 - Conflict resolution with [git-conflict.nvim](https://github.com/akinsho/git-conflict.nvim)
 - Git diff viewer with [diffview.nvim](https://github.com/sindrets/diffview.nvim)
+
+### 🔗 VS Code Integration
+
+Seamless compatibility with existing VS Code projects:
+
+- **Automatic Settings Sync** - Reads and applies `.vscode/settings.json` configurations
+- **TailwindCSS Compatibility** - Matches VS Code's `classAttributes` and `experimental.classRegex` patterns exactly
+- **ESLint Auto-fix** - Fast auto-fix on save using `eslint_d` (implements VS Code's `"source.fixAll.eslint": "explicit"`)
+- **Modern ESLint Support** - Works with flat config (`eslint.config.js`) and traditional `.eslintrc` configurations
+- **Prettier Configuration** - Respects project-specific prettier configs and formatting rules
+- **Unified Spell Check** - Automatically imports custom words from VS Code's `cSpell.words` settings
+- **Project Detection** - Smart detection of frontend, backend, CDK, and other project types
+- **Performance Optimized** - Uses `eslint_d` for fast linting and auto-fixing without LSP overhead
 
 ### 🛠️ Additional Utilities
 
@@ -262,7 +276,8 @@ Each plugin configuration is clearly separated and documented within the lazy.nv
 1. **LSP not working**: Ensure language servers are installed via `:Mason`
 2. **Icons not showing**: Install a Nerd Font and set it in your terminal
 3. **Slow startup**: Check `:Lazy profile` for plugin loading times
-4. **Formatting not working**: Verify formatters are installed and configured
+4. **ESLint auto-fix not working**: Ensure `eslint_d` is installed via Mason and project has valid ESLint config
+5. **Formatting not working**: Verify formatters are installed and configured
 
 ### Useful Commands
 
@@ -276,10 +291,13 @@ Each plugin configuration is clearly separated and documented within the lazy.nv
 
 This configuration is optimized for performance with:
 
-- Lazy loading for most plugins
-- Async formatting and linting
-- Optimized treesitter queries
-- Large file performance optimizations
+- **Lazy loading** for most plugins
+- **Async formatting and linting** with background job processing
+- **Optimized ESLint workflow** - `eslint_d` daemon for instant linting and auto-fixing
+- **Smart project detection** - Conditional tool loading based on project type
+- **Fast buffer reloading** - Optimized file change detection after auto-fixes
+- **Large file optimizations** - Automatic syntax/TreeSitter disabling for files >1MB
+- **Pre-initialized formatters** - Background loading of formatting tools on startup
 
 ## Credits
 
