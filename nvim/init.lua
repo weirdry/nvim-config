@@ -1,6 +1,6 @@
 -- ~/.config/nvim/init.lua
 
--- Lazy.nvim 설치
+-- Lazy.nvim installation
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
 	vim.fn.system({
@@ -15,7 +15,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 -- =============================================================================
--- 기본 설정 (Options)
+-- Basic Settings (Options)
 -- =============================================================================
 vim.g.mapleader = " "
 vim.o.number = true
@@ -27,10 +27,47 @@ vim.o.shiftwidth = 2
 vim.o.expandtab = false
 
 -- =============================================================================
--- 플러그인 관리 (Lazy.nvim)
+-- Helper Functions
+-- =============================================================================
+-- Check if project files exist
+local function has_project_files(files, root_dir)
+	root_dir = root_dir or vim.fn.getcwd()
+	for _, file in ipairs(files) do
+		if vim.fn.filereadable(root_dir .. "/" .. file) == 1 then
+			return true
+		end
+	end
+	return false
+end
+
+-- Detect project type
+local function detect_project_type(root_dir)
+	root_dir = root_dir or vim.fn.getcwd()
+
+	local frontend_files = { "package.json", "tsconfig.json", "tailwind.config.js", "tailwind.config.ts" }
+	local backend_files = { "nest-cli.json", "tsconfig.build.json" }
+	local cdk_files = { "cdk.json" }
+	local eslint_files =
+		{ "eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", ".eslintrc", ".eslintrc.js", ".eslintrc.json" }
+	local prettier_files =
+		{ ".prettierrc", ".prettierrc.json", ".prettierrc.js", ".prettierrc.yml", "prettier.config.js" }
+	local python_files = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".python-version" }
+
+	return {
+		is_frontend = has_project_files(frontend_files, root_dir),
+		is_backend = has_project_files(backend_files, root_dir),
+		is_cdk = has_project_files(cdk_files, root_dir),
+		has_eslint = has_project_files(eslint_files, root_dir),
+		has_prettier = has_project_files(prettier_files, root_dir),
+		has_python = has_project_files(python_files, root_dir),
+	}
+end
+
+-- =============================================================================
+-- Plugin Management (Lazy.nvim)
 -- =============================================================================
 require("lazy").setup({
-	-- 테마 및 UI
+	-- Theme and UI
 	{
 		"folke/tokyonight.nvim",
 		lazy = false,
@@ -161,7 +198,7 @@ require("lazy").setup({
 	},
 	{ "kyazdani42/nvim-web-devicons" },
 
-	-- LSP, 자동완성, 도구 설치
+	-- LSP, auto-completion, and tool installation
 	{ "neovim/nvim-lspconfig" },
 	{
 		"williamboman/mason.nvim",
@@ -203,7 +240,7 @@ require("lazy").setup({
 	},
 	{ "hrsh7th/nvim-cmp", dependencies = { "hrsh7th/cmp-nvim-lsp", "hrsh7th/cmp-buffer", "hrsh7th/cmp-path" } },
 
-	-- 파일 탐색 및 검색
+	-- File exploration and search
 	{
 		"nvim-telescope/telescope.nvim",
 		dependencies = { "nvim-lua/plenary.nvim", "SmiteshP/nvim-navic" },
@@ -253,7 +290,7 @@ require("lazy").setup({
 		end,
 	},
 
-	-- 코드 분석, 하이라이팅, 포맷팅
+	-- Code analysis, highlighting, and formatting
 	{ "mfussenegger/nvim-lint", event = { "BufReadPre", "BufNewFile" } },
 	{ "stevearc/conform.nvim", event = { "BufReadPre", "BufNewFile" } },
 	{
@@ -287,7 +324,7 @@ require("lazy").setup({
 		end,
 	},
 
-	-- Git 관련
+	-- Git integration
 	{ "tpope/vim-fugitive" },
 	{
 		"lewis6991/gitsigns.nvim",
@@ -303,7 +340,7 @@ require("lazy").setup({
 		end,
 	},
 
-	-- 디버깅
+	-- Debugging
 	{ "mfussenegger/nvim-dap" },
 	{ "mfussenegger/nvim-dap-python" },
 	{ "nvim-neotest/nvim-nio" },
@@ -325,7 +362,7 @@ require("lazy").setup({
 		end,
 	},
 
-	-- 코드 네비게이션
+	-- Code navigation
 	{
 		"stevearc/aerial.nvim",
 		config = function()
@@ -341,7 +378,7 @@ require("lazy").setup({
 		end,
 	},
 
-	-- 언어별 특화 플러그인
+	-- Language-specific plugins
 	{
 		"saecki/crates.nvim",
 		tag = "stable",
@@ -374,7 +411,7 @@ require("lazy").setup({
 		build = ':lua require("go.install").update_all_sync()',
 	},
 
-	-- UI/UX 개선
+	-- UI/UX improvemnets
 	{
 		"mg979/vim-visual-multi",
 		config = function()
@@ -471,7 +508,7 @@ require("lazy").setup({
 		end,
 	},
 
-	-- 유틸리티
+	-- Utilities
 	{
 		"iamcco/markdown-preview.nvim",
 		ft = "markdown",
@@ -578,17 +615,17 @@ require("lazy").setup({
 })
 
 -- =============================================================================
--- LSP 설정
+-- LSP Configuration
 -- =============================================================================
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 local function on_attach(client, bufnr)
-	-- navic 연결
+	-- navic connection
 	if client.server_capabilities.documentSymbolProvider then
 		require("nvim-navic").attach(client, bufnr)
 	end
 
-	-- 기본 키맵핑
+	-- Basic key mappings
 	vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr })
 	vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = bufnr })
 	vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = bufnr })
@@ -642,7 +679,8 @@ require("lspconfig").tailwindcss.setup({
 				classRegex = {
 					-- Matches VS Code patterns exactly
 					"className:\\s*['\"`]([^'\"`]*)['\"`]",
-					"cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"
+					"cn\\(([^)]*)\\)",
+					"[\"'`]([^\"'`]*).*?[\"'`]",
 				},
 			},
 			validate = true,
@@ -694,7 +732,7 @@ require("lspconfig").gopls.setup({
 	},
 	on_attach = function(client, bufnr)
 		on_attach(client, bufnr)
-		-- Go 전용 키맵
+		-- Go-specific keymaps
 		vim.keymap.set(
 			"n",
 			"<leader>gtf",
@@ -715,7 +753,7 @@ require("lspconfig").rust_analyzer.setup({
 	capabilities = capabilities,
 	on_attach = function(client, bufnr)
 		on_attach(client, bufnr)
-		-- Rust 전용 키맵
+		-- Rust-specific keymaps
 		vim.keymap.set("n", "<leader>rh", function()
 			local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
 			vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
@@ -752,7 +790,7 @@ require("lspconfig").rust_analyzer.setup({
 })
 
 -- =============================================================================
--- 자동완성 설정 (nvim-cmp)
+-- Auto-completion Configuration (nvim-cmp)
 -- =============================================================================
 local cmp = require("cmp")
 cmp.setup({
@@ -767,7 +805,7 @@ cmp.setup({
 })
 
 -- =============================================================================
--- 디버거 설정 (nvim-dap)
+-- Debugger Configuration (nvim-dap)
 -- =============================================================================
 require("dap-python").setup("~/.virtualenvs/debugpy/bin/python")
 
@@ -809,9 +847,9 @@ dap.configurations.rust = {
 }
 
 -- =============================================================================
--- 린터 및 포맷터 설정 (nvim-lint & conform.nvim)
+-- Linter and Formatter Configuration (nvim-lint & conform.nvim)
 -- =============================================================================
--- 린팅
+-- Linting
 require("lint").linters_by_ft = {
 	javascript = { "eslint" },
 	typescript = { "eslint" },
@@ -822,20 +860,13 @@ require("lint").linters_by_ft = {
 	rust = { "clippy" },
 }
 
--- ESLint 조건부 설정
+-- ESLint conditional configuration
 vim.api.nvim_create_autocmd({ "FileType" }, {
 	pattern = { "javascript", "typescript", "typescriptreact", "javascriptreact" },
 	callback = function()
-		local root = vim.fn.getcwd()
-		local is_frontend = vim.fn.filereadable(root .. "/package.json") == 1
-			or vim.fn.filereadable(root .. "/tsconfig.json") == 1
-			or vim.fn.filereadable(root .. "/tailwind.config.js") == 1
-			or vim.fn.filereadable(root .. "/tailwind.config.ts") == 1
-		local is_backend = vim.fn.filereadable(root .. "/nest-cli.json") == 1
-			or vim.fn.filereadable(root .. "/tsconfig.build.json") == 1
-		local is_cdk = vim.fn.filereadable(root .. "/cdk.json") == 1
+		local project = detect_project_type()
 
-		if not (is_frontend or is_backend or is_cdk) then
+		if not (project.is_frontend or project.is_backend or project.is_cdk) then
 			require("lint").linters_by_ft["javascript"] = {}
 			require("lint").linters_by_ft["typescript"] = {}
 			require("lint").linters_by_ft["typescriptreact"] = {}
@@ -844,7 +875,7 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
 	end,
 })
 
--- 커스텀 golangci-lint 설정
+-- Custom golangci-lint configuration
 require("lint").linters.golangcilint = {
 	cmd = "golangci-lint",
 	stdin = false,
@@ -885,16 +916,9 @@ require("lint").linters.golangcilint = {
 vim.api.nvim_create_autocmd("BufWritePost", {
 	pattern = { "*.js", "*.jsx", "*.ts", "*.tsx" },
 	callback = function()
-		-- Check for ESLint config in project
-		local root = vim.fn.getcwd()
-		local has_eslint_config = vim.fn.filereadable(root .. "/eslint.config.js") == 1
-			or vim.fn.filereadable(root .. "/eslint.config.mjs") == 1
-			or vim.fn.filereadable(root .. "/eslint.config.cjs") == 1
-			or vim.fn.filereadable(root .. "/.eslintrc") == 1 
-			or vim.fn.filereadable(root .. "/.eslintrc.js") == 1
-			or vim.fn.filereadable(root .. "/.eslintrc.json") == 1
-		
-		if not has_eslint_config then
+		local project = detect_project_type()
+
+		if not project.has_eslint then
 			return -- No ESLint config, skip auto-fix
 		end
 
@@ -903,8 +927,8 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 		if filename and filename ~= "" then
 			vim.fn.jobstart({
 				"eslint_d",
-				"--fix", 
-				filename
+				"--fix",
+				filename,
 			}, {
 				on_exit = function(_, exit_code)
 					-- Only reload if eslint_d made changes
@@ -912,7 +936,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 						-- Use edit! for faster reload
 						vim.cmd("silent! edit!")
 					end)
-				end
+				end,
 			})
 		end
 	end,
@@ -925,7 +949,7 @@ vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
 	end,
 })
 
--- 포맷팅
+-- Formatting
 require("conform").setup({
 	formatters_by_ft = {
 		javascript = { "prettier" },
@@ -947,26 +971,21 @@ require("conform").setup({
 			env = { PRETTIERD_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/prettierrc.json") },
 			condition = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
-				local has_prettier = vim.fn.filereadable(root_dir .. "/.prettierrc") == 1
-					or vim.fn.filereadable(root_dir .. "/.prettierrc.json") == 1
-					or vim.fn.filereadable(root_dir .. "/.prettierrc.js") == 1
-					or vim.fn.filereadable(root_dir .. "/.prettierrc.yml") == 1
-					or vim.fn.filereadable(root_dir .. "/prettier.config.js") == 1
-				local is_cdk = vim.fn.filereadable(root_dir .. "/cdk.json") == 1
+				local project = detect_project_type(root_dir)
 
-				-- markdown은 항상 포맷팅 허용 (조건 무시)
+				-- Always allow markdown formatting (ignore condition)
 				local filetype = vim.bo.filetype
 				if filetype == "markdown" then
 					return true
 				end
 
-				return has_prettier or is_cdk
+				return project.has_prettier or project.is_cdk
 			end,
 			prepend_args = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
-				local is_frontend = vim.fn.filereadable(root_dir .. "/tailwind.config.js") == 1
-					or vim.fn.filereadable(root_dir .. "/tailwind.config.ts") == 1
-				if is_frontend then
+				local project = detect_project_type(root_dir)
+
+				if project.is_frontend then
 					return { "--plugin", "prettier-plugin-tailwindcss" }
 				end
 				return {}
@@ -976,47 +995,25 @@ require("conform").setup({
 			prepend_args = { "--line-length", "88", "--preview", "--enable-unstable-feature", "string_processing" },
 			condition = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
-				for _, file in ipairs({
-					"pyproject.toml",
-					"setup.py",
-					"setup.cfg",
-					"requirements.txt",
-					".python-version",
-				}) do
-					local found = vim.fn.glob(root_dir .. "/**/" .. file, true)
-					if found ~= "" then
-						return true
-					end
-				end
-				return false
+				local project = detect_project_type(root_dir)
+				return project.has_python
 			end,
 		},
 		isort = {
 			prepend_args = { "--profile", "black" },
 			condition = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
-				for _, file in ipairs({
-					"pyproject.toml",
-					"setup.py",
-					"setup.cfg",
-					"requirements.txt",
-					".python-version",
-				}) do
-					local found = vim.fn.glob(root_dir .. "/**/" .. file, true)
-					if found ~= "" then
-						return true
-					end
-				end
-				return false
+				local project = detect_project_type(root_dir)
+				return project.has_python
 			end,
 		},
 	},
 })
 
 -- =============================================================================
--- 자동 명령 (Autocmds)
+-- Autocmds
 -- =============================================================================
--- 언어별 파일 형식 설정
+-- Language-specific file format settings
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "python",
 	command = "setlocal tabstop=4 shiftwidth=4 expandtab",
@@ -1026,7 +1023,7 @@ vim.api.nvim_create_autocmd("FileType", {
 	command = "setlocal tabstop=4 shiftwidth=4 noexpandtab",
 })
 
--- Rust 설정 (통합)
+-- Rust configuration (integrated)
 local rust_augroup = vim.api.nvim_create_augroup("RustConfig", { clear = true })
 vim.api.nvim_create_autocmd("BufWritePre", {
 	group = rust_augroup,
@@ -1061,7 +1058,7 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
--- Go 설정 (통합)
+-- Go configuration (integrated)
 local go_augroup = vim.api.nvim_create_augroup("GoFormat", { clear = true })
 vim.api.nvim_create_autocmd("BufWritePre", {
 	group = go_augroup,
@@ -1071,7 +1068,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 	end,
 })
 
--- 터미널 설정
+-- Terminal configuration
 vim.api.nvim_create_autocmd("TermOpen", {
 	pattern = "term://*",
 	callback = function()
@@ -1084,11 +1081,11 @@ vim.api.nvim_create_autocmd("TermOpen", {
 	end,
 })
 
--- 성능 최적화
+-- Performance optimization
 vim.api.nvim_create_autocmd("BufReadPre", {
 	callback = function()
 		local file_size = vim.fn.getfsize(vim.fn.expand("%"))
-		if file_size > 1024 * 1024 then -- 1MB 이상
+		if file_size > 1024 * 1024 then -- Over 1MB
 			vim.cmd("syntax off")
 			vim.cmd("TSBufDisable highlight")
 			vim.notify("Large file detected, disabling syntax for performance")
@@ -1096,7 +1093,7 @@ vim.api.nvim_create_autocmd("BufReadPre", {
 	end,
 })
 
--- config 파일 최적화
+-- Config file optimization
 vim.api.nvim_create_autocmd("BufReadPre", {
 	pattern = vim.fn.stdpath("config") .. "/init.lua",
 	callback = function()
@@ -1107,25 +1104,25 @@ vim.api.nvim_create_autocmd("BufReadPre", {
 })
 
 -- Project-specific spell check words from .vscode/settings.json
-vim.api.nvim_create_autocmd({"BufRead", "BufNewFile"}, {
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
 	callback = function()
 		local function find_vscode_settings()
-			local current_dir = vim.fn.expand('%:p:h')
-			while current_dir ~= '/' do
-				local vscode_file = current_dir .. '/.vscode/settings.json'
+			local current_dir = vim.fn.expand("%:p:h")
+			while current_dir ~= "/" do
+				local vscode_file = current_dir .. "/.vscode/settings.json"
 				if vim.fn.filereadable(vscode_file) == 1 then
 					return vscode_file
 				end
-				current_dir = vim.fn.fnamemodify(current_dir, ':h')
+				current_dir = vim.fn.fnamemodify(current_dir, ":h")
 			end
 			return nil
 		end
-		
+
 		local vscode_settings = find_vscode_settings()
 		if vscode_settings then
 			local ok, content = pcall(vim.fn.readfile, vscode_settings)
 			if ok then
-				local json_str = table.concat(content, '\n')
+				local json_str = table.concat(content, "\n")
 				-- Simple regex to extract cSpell.words array
 				local words_match = json_str:match('"cSpell%.words"%s*:%s*%[([^%]]+)%]')
 				if words_match then
@@ -1133,21 +1130,21 @@ vim.api.nvim_create_autocmd({"BufRead", "BufNewFile"}, {
 					for word in words_match:gmatch('"([^"]+)"') do
 						table.insert(custom_words, word)
 					end
-					
+
 					if #custom_words > 0 then
 						-- Create project-specific spell file
-						local project_root = vim.fn.fnamemodify(vscode_settings, ':h:h')
-						local spell_dir = project_root .. '/.nvim/spell'
-						vim.fn.mkdir(spell_dir, 'p')
-						
-						local spell_file = spell_dir .. '/project.utf-8.add'
-						local file = io.open(spell_file, 'w')
+						local project_root = vim.fn.fnamemodify(vscode_settings, ":h:h")
+						local spell_dir = project_root .. "/.nvim/spell"
+						vim.fn.mkdir(spell_dir, "p")
+
+						local spell_file = spell_dir .. "/project.utf-8.add"
+						local file = io.open(spell_file, "w")
 						if file then
 							for _, word in ipairs(custom_words) do
-								file:write(word .. '\n')
+								file:write(word .. "\n")
 							end
 							file:close()
-							
+
 							-- Set project-specific spellfile for current buffer
 							vim.opt_local.spellfile = spell_file
 						end
@@ -1158,11 +1155,11 @@ vim.api.nvim_create_autocmd({"BufRead", "BufNewFile"}, {
 	end,
 })
 
--- 포맷터 미리 초기화
+-- Pre-initialize formatters
 vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
 		vim.defer_fn(function()
-			-- 비동기로 포맷터들 초기화
+			-- Initialize formatters asynchronously
 			vim.fn.jobstart("black --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
 			vim.fn.jobstart("isort --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
 			vim.fn.jobstart("prettier --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
@@ -1175,7 +1172,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
 })
 
 -- =============================================================================
--- 사용자 정의 커맨드
+-- User-defined Commands
 -- =============================================================================
 vim.api.nvim_create_user_command("RustNewProject", function(opts)
 	local project_name = opts.args
@@ -1193,9 +1190,9 @@ vim.api.nvim_create_user_command("RustNewProject", function(opts)
 end, { nargs = "?" })
 
 -- =============================================================================
--- 키 매핑 (Keymaps)
+-- Key Mappings (Keymaps)
 -- =============================================================================
--- 파일 탐색
+-- File exploration
 local tree = require("nvim-tree.api")
 vim.keymap.set("n", "<leader>ft", tree.tree.toggle, { desc = "Toggle File Explorer" })
 
@@ -1212,10 +1209,10 @@ vim.keymap.set("n", "<leader>fw", builtin.grep_string, { desc = "Search current 
 vim.keymap.set("n", "<leader>fn", ":Telescope neoclip<CR>", { desc = "Show clipboard history" })
 vim.keymap.set("n", "<leader>fT", "<cmd>TodoTelescope<cr>", { desc = "Search TODOs" })
 
--- Telescope 확장 로드
+-- Load Telescope extensions
 require("telescope").load_extension("neoclip")
 
--- Rust 프로젝트 관련 검색
+-- Rust project-related search
 vim.keymap.set("n", "<leader>rc", function()
 	builtin.find_files({
 		prompt_title = "Find Cargo.toml",
@@ -1257,7 +1254,7 @@ vim.keymap.set("n", "<leader>hn", function()
 	harpoon:list():next()
 end, { desc = "Next Harpoon file" })
 
--- Harpoon 확장 설정
+-- Harpoon extension configuration
 harpoon:extend({
 	UI_CREATE = function(cx)
 		vim.keymap.set("n", "<C-v>", function()
@@ -1272,7 +1269,7 @@ harpoon:extend({
 	end,
 })
 
--- Cargo 명령어
+-- Cargo commands
 local Terminal = require("toggleterm.terminal").Terminal
 local function run_cargo_cmd(cmd, opts)
 	opts = opts or {}
@@ -1310,7 +1307,7 @@ vim.keymap.set("n", "<leader>cd", function()
 	run_cargo_cmd("cargo doc --open")
 end, { desc = "Cargo Doc" })
 
--- 인터랙티브 Cargo 명령어
+-- Interactive Cargo commands
 vim.keymap.set("n", "<leader>cR", function()
 	local args = vim.fn.input("cargo run arguments: ")
 	local cmd = args ~= "" and "cargo run " .. args or "cargo run"
@@ -1322,7 +1319,7 @@ vim.keymap.set("n", "<leader>cT", function()
 	run_cargo_cmd(cmd)
 end, { desc = "Cargo Test specific" })
 
--- 터미널 방향별 실행
+-- Terminal direction-specific execution
 vim.keymap.set("n", "<leader>crh", function()
 	run_cargo_cmd("cargo run", { direction = "horizontal" })
 end, { desc = "Cargo Run (horizontal)" })
@@ -1340,7 +1337,7 @@ vim.keymap.set("n", "<leader>bo", "<Cmd>BufferLineCloseOthers<CR>", { desc = "Cl
 vim.keymap.set("n", "<leader>bp", "<Cmd>BufferLinePick<CR>", { desc = "Pick buffer" })
 vim.keymap.set("n", "<leader>bs", "<Cmd>BufferLineSortByDirectory<CR>", { desc = "Sort buffers by directory" })
 
--- 진단 (Diagnostics)
+-- Diagnostics
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous Diagnostic" })
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next Diagnostic" })
 vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show Diagnostic" })
@@ -1387,7 +1384,7 @@ vim.api.nvim_set_keymap("n", "#", [[#<Cmd>lua require('hlslens').start()<CR>]], 
 vim.api.nvim_set_keymap("n", "g*", [[g*<Cmd>lua require('hlslens').start()<CR>]], kopts)
 vim.api.nvim_set_keymap("n", "g#", [[g#<Cmd>lua require('hlslens').start()<CR>]], kopts)
 
--- 검색 하이라이트 지우기
+-- Clear search highlights
 vim.api.nvim_set_keymap("n", "<Esc><Esc>", "<Cmd>noh<CR>", kopts)
 
 -- Noice
@@ -1408,15 +1405,15 @@ vim.keymap.set({ "n", "i", "s" }, "<c-b>", function()
 	end
 end, { silent = true, expr = true })
 
--- 기타
+-- Miscellaneous
 vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle!<CR>", { desc = "Aerial Toggle" })
 vim.keymap.set("n", "<leader>sv", function()
 	require("swenv.api").pick_venv()
 end, { desc = "Select virtual environment" })
 
--- which-key 등록 (새로운 spec 형식)
+-- which-key registration (new spec format)
 require("which-key").add({
-	-- 그룹 정의
+	-- Group definitions
 	{ "<leader>r", group = "Rust" },
 	{ "<leader>c", group = "Cargo" },
 	{ "<leader>h", group = "Harpoon" },
@@ -1428,7 +1425,7 @@ require("which-key").add({
 })
 
 -- =============================================================================
--- UI 및 기타 설정
+-- UI and Other Settings
 -- =============================================================================
 -- Winbar
 vim.api.nvim_set_hl(0, "Winbar", { bg = "#1a1b26", fg = "#a9b1d6", bold = true, italic = false })
@@ -1436,7 +1433,7 @@ vim.api.nvim_set_hl(0, "NavicText", { fg = "#a9b1d6", bg = "#1a1b26" })
 vim.api.nvim_set_hl(0, "NavicSeparator", { fg = "#565f89", bg = "#1a1b26" })
 vim.o.winbar = "%#Winbar#%{%v:lua.require'nvim-navic'.get_location()%}"
 
--- 진단 표시 설정
+-- Diagnostic display configuration
 vim.diagnostic.config({
 	virtual_text = { prefix = "●", source = "always", spacing = 4 },
 	float = { source = "always", border = "rounded", header = "", prefix = "" },
@@ -1452,7 +1449,7 @@ vim.diagnostic.config({
 	severity_sort = true,
 })
 
--- Markdown preview 설정
+-- Markdown preview configuration
 vim.g.mkdp_auto_start = 0
 vim.g.mkdp_auto_close = 1
 vim.g.mkdp_refresh_slow = 0
@@ -1462,5 +1459,5 @@ vim.g.mkdp_browser = ""
 vim.g.mkdp_echo_preview_url = 0
 vim.g.mkdp_page_title = "${name}"
 
--- Python 파일형식 인식
+-- Python file type recognition
 vim.filetype.add({ extension = { py = "python" } })
