@@ -228,7 +228,7 @@ require("lazy").setup({
 					"golangci-lint",
 					"gofumpt",
 					"goimports",
-					-- Rust tools
+					-- Rust tools (rustfmt installed via rustup)
 					"codelldb",
 					-- other tools
 					"stylua",
@@ -1025,13 +1025,14 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- Rust configuration (integrated)
 local rust_augroup = vim.api.nvim_create_augroup("RustConfig", { clear = true })
-vim.api.nvim_create_autocmd("BufWritePre", {
-	group = rust_augroup,
-	pattern = "*.rs",
-	callback = function()
-		vim.lsp.buf.format({ async = false })
-	end,
-})
+-- Commented out: conflicts with conform.nvim formatting
+-- vim.api.nvim_create_autocmd("BufWritePre", {
+-- 	group = rust_augroup,
+-- 	pattern = "*.rs",
+-- 	callback = function()
+-- 		vim.lsp.buf.format({ async = false })
+-- 	end,
+-- })
 vim.api.nvim_create_autocmd("FileType", {
 	group = rust_augroup,
 	pattern = "rust",
