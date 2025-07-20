@@ -202,12 +202,10 @@ require("lazy").setup({
 	{ "neovim/nvim-lspconfig" },
 	{
 		"williamboman/mason.nvim",
-		dependencies = { "williamboman/mason-lspconfig.nvim", "neovim/nvim-lspconfig" },
+		dependencies = { "neovim/nvim-lspconfig" },
 		config = function()
 			require("mason").setup()
-			require("mason-lspconfig").setup({
-				ensure_installed = { "ts_ls", "tailwindcss", "pyright", "gopls", "rust_analyzer" },
-			})
+			-- Completely disable mason-lspconfig to prevent auto-starting LSP servers
 		end,
 	},
 	{
@@ -753,10 +751,23 @@ require("lspconfig").rust_analyzer.setup({
 	capabilities = capabilities,
 	on_attach = function(client, bufnr)
 		on_attach(client, bufnr)
+
+		-- Enable inlay hints by default for rust-analyzer
+		if client.name == "rust_analyzer" and vim.lsp.inlay_hint then
+			vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+		end
+
 		-- Rust-specific keymaps
 		vim.keymap.set("n", "<leader>rh", function()
+			-- Force toggle - if not visible, enable them
 			local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
-			vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
+			if enabled then
+				vim.lsp.inlay_hint.enable(false, { bufnr = bufnr })
+				vim.notify("Inlay hints disabled")
+			else
+				vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+				vim.notify("Inlay hints enabled")
+			end
 		end, { buffer = bufnr, desc = "Toggle Inlay Hints" })
 		vim.keymap.set("n", "<leader>rr", ":LspRestart<CR>", { buffer = bufnr, desc = "LSP Restart" })
 		vim.keymap.set(
@@ -774,7 +785,7 @@ require("lspconfig").rust_analyzer.setup({
 	end,
 	settings = {
 		["rust-analyzer"] = {
-			checkOnSave = { command = "clippy", extraArgs = { "--all-targets", "--all-features" } },
+			checkOnSave = { command = "check" }, -- Use 'check' instead of 'clippy' to avoid conflicts
 			inlayHints = {
 				enable = true,
 				showParameterNames = true,
@@ -783,8 +794,19 @@ require("lspconfig").rust_analyzer.setup({
 			},
 			diagnostics = { enable = true, experimental = { enable = true } },
 			completion = { addCallArgumentSnippets = true, addCallParenthesis = true },
-			cargo = { allFeatures = true, loadOutDirsFromCheck = true, runBuildScripts = true },
+			cargo = {
+				allFeatures = true,
+				loadOutDirsFromCheck = true,
+				runBuildScripts = true,
+				autoreload = true,
+			},
 			procMacro = { enable = true },
+			files = {
+				watcherExclude = {
+					"**/target/**",
+					"**/.git/**",
+				},
+			},
 		},
 	},
 })
@@ -1025,6 +1047,18 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- Rust configuration (integrated)
 local rust_augroup = vim.api.nvim_create_augroup("RustConfig", { clear = true })
+
+-- Auto-restart rust-analyzer when Cargo.toml changes
+vim.api.nvim_create_autocmd("BufWritePost", {
+	group = rust_augroup,
+	pattern = "Cargo.toml",
+	callback = function()
+		vim.defer_fn(function()
+			vim.cmd("LspRestart rust_analyzer")
+			vim.notify("rust-analyzer restarted due to Cargo.toml changes")
+		end, 500)
+	end,
+})
 -- Commented out: conflicts with conform.nvim formatting
 -- vim.api.nvim_create_autocmd("BufWritePre", {
 -- 	group = rust_augroup,
@@ -1416,6 +1450,12 @@ end, { desc = "Select virtual environment" })
 require("which-key").add({
 	-- Group definitions
 	{ "<leader>r", group = "Rust" },
+	{ "<leader>rr", desc = "LSP Restart" },
+	{ "<leader>rh", desc = "Toggle Inlay Hints" },
+	{ "<leader>rt", desc = "Rust test" },
+	{ "<leader>rd", desc = "Rust debug" },
+	{ "<leader>rc", desc = "Find Cargo.toml" },
+	{ "<leader>rs", desc = "Search in Rust files" },
 	{ "<leader>c", group = "Cargo" },
 	{ "<leader>h", group = "Harpoon" },
 	{ "<leader>f", group = "Find" },
