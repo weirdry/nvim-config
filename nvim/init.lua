@@ -617,6 +617,7 @@ require("lazy").setup({
 -- =============================================================================
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
+
 local function on_attach(client, bufnr)
 	-- navic connection
 	if client.server_capabilities.documentSymbolProvider then
@@ -759,13 +760,17 @@ require("lspconfig").rust_analyzer.setup({
 
 		-- Rust-specific keymaps
 		vim.keymap.set("n", "<leader>rh", function()
-			-- Force toggle - if not visible, enable them
-			local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
+			-- Force toggle - if not visible, enable them with error handling
+			local ok, enabled = pcall(vim.lsp.inlay_hint.is_enabled, { bufnr = bufnr })
+			if not ok then
+				vim.notify("Inlay hints not available", vim.log.levels.WARN)
+				return
+			end
 			if enabled then
-				vim.lsp.inlay_hint.enable(false, { bufnr = bufnr })
+				pcall(vim.lsp.inlay_hint.enable, false, { bufnr = bufnr })
 				vim.notify("Inlay hints disabled")
 			else
-				vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+				pcall(vim.lsp.inlay_hint.enable, true, { bufnr = bufnr })
 				vim.notify("Inlay hints enabled")
 			end
 		end, { buffer = bufnr, desc = "Toggle Inlay Hints" })
@@ -787,10 +792,16 @@ require("lspconfig").rust_analyzer.setup({
 		["rust-analyzer"] = {
 			checkOnSave = { command = "check" }, -- Use 'check' instead of 'clippy' to avoid conflicts
 			inlayHints = {
-				enable = true,
-				showParameterNames = true,
-				parameterHintsPrefix = "<- ",
-				otherHintsPrefix = "=> ",
+				bindingModeHints = { enable = false },
+				chainingHints = { enable = true },
+				closingBraceHints = { enable = true, minLines = 25 },
+				closureReturnTypeHints = { enable = "never" },
+				lifetimeElisionHints = { enable = "never", useParameterNames = false },
+				maxLength = 25,
+				parameterHints = { enable = true },
+				reborrowHints = { enable = "never" },
+				renderColons = true,
+				typeHints = { enable = true, hideClosureInitialization = false, hideNamedConstructor = false },
 			},
 			diagnostics = { enable = true, experimental = { enable = true } },
 			completion = { addCallArgumentSnippets = true, addCallParenthesis = true },
