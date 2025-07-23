@@ -44,7 +44,7 @@ end
 local function detect_project_type(root_dir)
 	root_dir = root_dir or vim.fn.getcwd()
 
-	local frontend_files = { "package.json", "tsconfig.json", "tailwind.config.js", "tailwind.config.ts" }
+	local frontend_files = { "tailwind.config.js", "tailwind.config.ts", "next.config.js", "nuxt.config.js", "vite.config.js", "webpack.config.js" }
 	local backend_files = { "nest-cli.json", "tsconfig.build.json" }
 	local cdk_files = { "cdk.json" }
 	local eslint_files =
@@ -1016,9 +1016,9 @@ require("conform").setup({
 			end,
 			prepend_args = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
-				local project = detect_project_type(root_dir)
-
-				if project.is_frontend then
+				
+				-- Only add TailwindCSS plugin if TailwindCSS config files exist
+				if has_project_files({ "tailwind.config.js", "tailwind.config.ts" }, root_dir) then
 					return { "--plugin", "prettier-plugin-tailwindcss" }
 				end
 				return {}
