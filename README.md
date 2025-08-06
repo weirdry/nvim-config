@@ -20,7 +20,7 @@ Full LSP integration via [nvim-lspconfig](https://github.com/neovim/nvim-lspconf
 - **TypeScript/JavaScript** - Full-stack development with ESLint, Prettier
 - **Python** - Data science ready with Black, isort, ruff
 - **Go** - Enterprise development with gopls, golangci-lint, gofumpt
-- **Rust** - Modern systems programming with rust-analyzer, clippy
+- **Rust** - Modern systems programming with rustaceanvim, real-time diagnostics
 - **TailwindCSS** - Modern CSS framework support
 - **HTML/CSS** - Web development essentials
 
@@ -36,7 +36,7 @@ Full LSP integration via [nvim-lspconfig](https://github.com/neovim/nvim-lspconf
 ### 🌟 Language-Specific Features
 
 - **Go**: [go.nvim](https://github.com/ray-x/go.nvim) for advanced Go development
-- **Rust**: [crates.nvim](https://github.com/saecki/crates.nvim) for Cargo dependency management
+- **Rust**: [rustaceanvim](https://github.com/mrcjkb/rustaceanvim) for modern Rust development + [crates.nvim](https://github.com/saecki/crates.nvim) for dependency management
 - **Python**: Virtual environment management with [swenv.nvim](https://github.com/AckslD/swenv.nvim)
 - **JavaScript/TypeScript**: Advanced project detection and configuration
 
@@ -109,9 +109,12 @@ Seamless compatibility with existing VS Code projects:
 - **Required components** (install via rustup, NOT Mason):
   ```bash
   rustup component add rust-analyzer clippy rustfmt
-  # Note: rustfmt and clippy are part of the Rust toolchain and should be installed via rustup, not Mason
   ```
-- **rust-analyzer**, **clippy**, **rustfmt** (installed via `rustup component add`)
+- **Key features**: Uses [rustaceanvim](https://github.com/mrcjkb/rustaceanvim) for:
+  - Real-time diagnostics without LSP restarts
+  - Background test execution with diagnostic feedback
+  - Enhanced error explanations with `:RustLsp explainError`
+  - Automatic rust-analyzer configuration
 
 ## Installation
 
@@ -202,8 +205,11 @@ The plugins will be automatically installed on the first launch via Mason and la
 - `<leader>h1-4` - Jump to Harpoon file 1-4
 - `<leader>hp/hn` - Previous/Next Harpoon file
 
-### Rust Development
+### Rust Development (rustaceanvim)
 
+- `:RustLsp explainError` - Explain error codes with detailed documentation
+- `:RustLsp testables` - Run Rust tests with background diagnostics
+- `:RustLsp debuggables` - Debug Rust applications
 - `<leader>rh` - Toggle inlay hints
 - `<leader>cr` - Cargo run
 - `<leader>ct` - Cargo test

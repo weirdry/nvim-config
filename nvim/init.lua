@@ -379,6 +379,22 @@ require("lazy").setup({
 
 	-- Language-specific plugins
 	{
+		-- Modern Rust development plugin (successor to rust-tools.nvim)
+		-- Provides real-time diagnostics, debugging, and enhanced Rust LSP features
+		"mrcjkb/rustaceanvim",
+		version = "^6",
+		lazy = false, -- Load immediately for Rust files
+		ft = { "rust" },
+		config = function()
+			-- Minimal configuration - let rustaceanvim use its defaults for real-time diagnostics
+			vim.g.rustaceanvim = {
+				tools = {
+					test_executor = 'background',
+				},
+			}
+		end,
+	},
+	{
 		"saecki/crates.nvim",
 		tag = "stable",
 		dependencies = { "nvim-lua/plenary.nvim" },
@@ -748,80 +764,9 @@ require("lspconfig").gopls.setup({
 	end,
 })
 
--- Rust
-require("lspconfig").rust_analyzer.setup({
-	capabilities = capabilities,
-	on_attach = function(client, bufnr)
-		on_attach(client, bufnr)
-
-		-- Enable inlay hints by default for rust-analyzer
-		if client.name == "rust_analyzer" and vim.lsp.inlay_hint then
-			vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
-		end
-
-		-- Rust-specific keymaps
-		vim.keymap.set("n", "<leader>rh", function()
-			-- Force toggle - if not visible, enable them with error handling
-			local ok, enabled = pcall(vim.lsp.inlay_hint.is_enabled, { bufnr = bufnr })
-			if not ok then
-				vim.notify("Inlay hints not available", vim.log.levels.WARN)
-				return
-			end
-			if enabled then
-				pcall(vim.lsp.inlay_hint.enable, false, { bufnr = bufnr })
-				vim.notify("Inlay hints disabled")
-			else
-				pcall(vim.lsp.inlay_hint.enable, true, { bufnr = bufnr })
-				vim.notify("Inlay hints enabled")
-			end
-		end, { buffer = bufnr, desc = "Toggle Inlay Hints" })
-		vim.keymap.set("n", "<leader>rr", ":LspRestart<CR>", { buffer = bufnr, desc = "LSP Restart" })
-		vim.keymap.set(
-			"n",
-			"<leader>rt",
-			"<cmd>lua vim.lsp.buf.code_action()<CR>",
-			{ buffer = bufnr, desc = "Rust test" }
-		)
-		vim.keymap.set(
-			"n",
-			"<leader>rd",
-			"<cmd>lua vim.lsp.buf.code_action()<CR>",
-			{ buffer = bufnr, desc = "Rust debug" }
-		)
-	end,
-	settings = {
-		["rust-analyzer"] = {
-			checkOnSave = { command = "check" }, -- Use 'check' instead of 'clippy' to avoid conflicts
-			inlayHints = {
-				bindingModeHints = { enable = false },
-				chainingHints = { enable = true },
-				closingBraceHints = { enable = true, minLines = 25 },
-				closureReturnTypeHints = { enable = "never" },
-				lifetimeElisionHints = { enable = "never", useParameterNames = false },
-				maxLength = 25,
-				parameterHints = { enable = true },
-				reborrowHints = { enable = "never" },
-				renderColons = true,
-				typeHints = { enable = true, hideClosureInitialization = false, hideNamedConstructor = false },
-			},
-			diagnostics = { enable = true, experimental = { enable = true } },
-			completion = { addCallArgumentSnippets = true, addCallParenthesis = true },
-			cargo = {
-				allFeatures = true,
-				loadOutDirsFromCheck = true,
-				runBuildScripts = true,
-				autoreload = true,
-			},
-			procMacro = { enable = true },
-			files = {
-				watcherExclude = {
-					"**/target/**",
-					"**/.git/**",
-				},
-			},
-		},
-	},
-})
+-- Rust LSP configuration is now handled by rustaceanvim plugin above
+-- This provides better real-time diagnostics and follows modern Rust+Neovim practices
+-- Key features: automatic rust-analyzer setup, background test diagnostics, error explanations
 
 -- =============================================================================
 -- Auto-completion Configuration (nvim-cmp)
@@ -978,10 +923,16 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 
 vim.api.nvim_create_autocmd({ "BufWritePost", "BufEnter", "InsertLeave" }, {
 	callback = function()
-		require("lint").try_lint()
-		vim.diagnostic.show()
+		-- Only run nvim-lint for non-Rust files (Rust uses rust-analyzer diagnostics)
+		local filetype = vim.bo.filetype
+		if filetype ~= "rust" then
+			require("lint").try_lint()
+		end
+		-- Remove manual diagnostic.show() - let LSP handle it naturally
 	end,
 })
+
+-- rustaceanvim handles real-time diagnostics automatically
 
 -- Formatting
 require("conform").setup({
@@ -1060,17 +1011,7 @@ vim.api.nvim_create_autocmd("FileType", {
 -- Rust configuration (integrated)
 local rust_augroup = vim.api.nvim_create_augroup("RustConfig", { clear = true })
 
--- Auto-restart rust-analyzer when Cargo.toml changes
-vim.api.nvim_create_autocmd("BufWritePost", {
-	group = rust_augroup,
-	pattern = "Cargo.toml",
-	callback = function()
-		vim.defer_fn(function()
-			vim.cmd("LspRestart rust_analyzer")
-			vim.notify("rust-analyzer restarted due to Cargo.toml changes")
-		end, 500)
-	end,
-})
+-- rustaceanvim handles Cargo.toml changes automatically
 -- Commented out: conflicts with conform.nvim formatting
 -- vim.api.nvim_create_autocmd("BufWritePre", {
 -- 	group = rust_augroup,
