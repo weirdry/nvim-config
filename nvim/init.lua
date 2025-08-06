@@ -230,6 +230,7 @@ require("lazy").setup({
 					"codelldb",
 					-- other tools
 					"stylua",
+					-- NOTE: rust-analyzer should be installed via rustup, not Mason
 				},
 				auto_update = true,
 				run_on_start = true,
@@ -890,7 +891,7 @@ require("lint").linters_by_ft = {
 	javascriptreact = { "eslint" },
 	python = { "ruff" },
 	go = { "golangcilint" },
-	rust = { "clippy" },
+	-- rust = { "clippy" }, -- Disabled: rust-analyzer provides clippy diagnostics
 }
 
 -- ESLint conditional configuration
