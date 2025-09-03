@@ -1,6 +1,6 @@
 # Neovim Configuration
 
-A modern, IDE-like Neovim configuration with comprehensive LSP support, optimized for **TypeScript, Python, Go, and Rust** development featuring the Tokyo Night theme.
+A modern, IDE-like Neovim configuration with comprehensive LSP support, optimized for **TypeScript, Python, Go, Rust, and Protocol Buffers** development featuring the Tokyo Night theme.
 
 ![Neovim Screenshot](./screenshots/screenshot.webp)
 
@@ -21,6 +21,7 @@ Full LSP integration via [nvim-lspconfig](https://github.com/neovim/nvim-lspconf
 - **Python** - Data science ready with Black, isort, ruff
 - **Go** - Enterprise development with gopls, golangci-lint, gofumpt
 - **Rust** - Modern systems programming with rustaceanvim, real-time diagnostics
+- **Protocol Buffers** - Modern API development with buf LSP and formatting
 - **TailwindCSS** - Modern CSS framework support
 - **HTML/CSS** - Web development essentials
 
@@ -103,6 +104,18 @@ Seamless compatibility with existing VS Code projects:
 - **Go 1.19+**
 - **golangci-lint** for comprehensive linting
 
+#### Protocol Buffers
+
+- **buf CLI** - Modern Protocol Buffer tooling (installed automatically via Mason or manually via Homebrew):
+  ```bash
+  brew install bufbuild/buf/buf
+  ```
+- **Key features**: Uses buf CLI for:
+  - Real-time LSP diagnostics and validation
+  - Automatic formatting with `buf format`
+  - Modern Protocol Buffer development workflow
+  - Compatible with buf.yaml configuration files
+
 #### Rust
 
 - **Rust** (latest stable) installed via [rustup](https://rustup.rs/)
@@ -152,6 +165,9 @@ rustup component add rust-analyzer clippy rustfmt
 
 # Go tools (if using Go)
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# Protocol Buffers (if using protobuf)
+brew install bufbuild/buf/buf
 ```
 
 ### 5. Launch Neovim

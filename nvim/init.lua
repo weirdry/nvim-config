@@ -44,7 +44,14 @@ end
 local function detect_project_type(root_dir)
 	root_dir = root_dir or vim.fn.getcwd()
 
-	local frontend_files = { "tailwind.config.js", "tailwind.config.ts", "next.config.js", "nuxt.config.js", "vite.config.js", "webpack.config.js" }
+	local frontend_files = {
+		"tailwind.config.js",
+		"tailwind.config.ts",
+		"next.config.js",
+		"nuxt.config.js",
+		"vite.config.js",
+		"webpack.config.js",
+	}
 	local backend_files = { "nest-cli.json", "tsconfig.build.json" }
 	local cdk_files = { "cdk.json" }
 	local eslint_files =
@@ -228,6 +235,8 @@ require("lazy").setup({
 					"goimports",
 					-- Rust tools (rustfmt installed via rustup)
 					"codelldb",
+					-- Protocol Buffer tools
+					"buf",
 					-- other tools
 					"stylua",
 					-- NOTE: rust-analyzer should be installed via rustup, not Mason
@@ -308,6 +317,7 @@ require("lazy").setup({
 					"go",
 					"rust",
 					"toml",
+					"proto",
 				},
 				highlight = { enable = true },
 				indent = { enable = true },
@@ -389,7 +399,7 @@ require("lazy").setup({
 			-- Minimal configuration - let rustaceanvim use its defaults for real-time diagnostics
 			vim.g.rustaceanvim = {
 				tools = {
-					test_executor = 'background',
+					test_executor = "background",
 				},
 			}
 		end,
@@ -634,7 +644,6 @@ require("lazy").setup({
 -- =============================================================================
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-
 local function on_attach(client, bufnr)
 	-- navic connection
 	if client.server_capabilities.documentSymbolProvider then
@@ -768,6 +777,12 @@ require("lspconfig").gopls.setup({
 -- This provides better real-time diagnostics and follows modern Rust+Neovim practices
 -- Key features: automatic rust-analyzer setup, background test diagnostics, error explanations
 
+-- Protocol Buffers (buf LSP is built into buf CLI)
+require("lspconfig").buf_ls.setup({
+	capabilities = capabilities,
+	on_attach = on_attach,
+})
+
 -- =============================================================================
 -- Auto-completion Configuration (nvim-cmp)
 -- =============================================================================
@@ -836,6 +851,7 @@ require("lint").linters_by_ft = {
 	javascriptreact = { "eslint" },
 	python = { "ruff" },
 	go = { "golangcilint" },
+	-- proto = {}, -- Disabled: buf_ls LSP provides real-time linting
 	-- rust = { "clippy" }, -- Disabled: rust-analyzer provides clippy diagnostics
 }
 
@@ -949,6 +965,7 @@ require("conform").setup({
 		lua = { "stylua" },
 		go = { "gofumpt", "goimports" },
 		rust = { "rustfmt" },
+		proto = { "buf" },
 	},
 	format_on_save = { timeout_ms = 3000, lsp_fallback = true },
 	formatters = {
@@ -968,7 +985,7 @@ require("conform").setup({
 			end,
 			prepend_args = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
-				
+
 				-- Only add TailwindCSS plugin if TailwindCSS config files exist
 				if has_project_files({ "tailwind.config.js", "tailwind.config.ts" }, root_dir) then
 					return { "--plugin", "prettier-plugin-tailwindcss" }
@@ -1006,6 +1023,10 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "go",
 	command = "setlocal tabstop=4 shiftwidth=4 noexpandtab",
+})
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "proto",
+	command = "setlocal tabstop=2 shiftwidth=2 expandtab",
 })
 
 -- Rust configuration (integrated)
