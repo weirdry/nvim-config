@@ -33,8 +33,17 @@ vim.o.expandtab = false
 local function has_project_files(files, root_dir)
 	root_dir = root_dir or vim.fn.getcwd()
 	for _, file in ipairs(files) do
-		if vim.fn.filereadable(root_dir .. "/" .. file) == 1 then
-			return true
+		if file:match("%*") then
+			-- Handle glob patterns
+			local glob_files = vim.fn.glob(root_dir .. "/" .. file, 0, 1)
+			if #glob_files > 0 then
+				return true
+			end
+		else
+			-- Handle direct file names
+			if vim.fn.filereadable(root_dir .. "/" .. file) == 1 then
+				return true
+			end
 		end
 	end
 	return false
@@ -59,6 +68,7 @@ local function detect_project_type(root_dir)
 	local prettier_files =
 		{ ".prettierrc", ".prettierrc.json", ".prettierrc.js", ".prettierrc.yml", "prettier.config.js" }
 	local python_files = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".python-version" }
+	local terraform_files = { "main.tf", "variables.tf", "outputs.tf", "terraform.tf", "*.tf", "*.tfvars" }
 
 	return {
 		is_frontend = has_project_files(frontend_files, root_dir),
@@ -67,6 +77,7 @@ local function detect_project_type(root_dir)
 		has_eslint = has_project_files(eslint_files, root_dir),
 		has_prettier = has_project_files(prettier_files, root_dir),
 		has_python = has_project_files(python_files, root_dir),
+		has_terraform = has_project_files(terraform_files, root_dir),
 	}
 end
 
@@ -237,6 +248,10 @@ require("lazy").setup({
 					"codelldb",
 					-- Protocol Buffer tools
 					"buf",
+					-- Terraform tools
+					"terraform-ls",
+					"tflint",
+					"tfsec",
 					-- other tools
 					"stylua",
 					-- NOTE: rust-analyzer should be installed via rustup, not Mason
@@ -318,6 +333,7 @@ require("lazy").setup({
 					"rust",
 					"toml",
 					"proto",
+					"hcl",
 				},
 				highlight = { enable = true },
 				indent = { enable = true },
@@ -783,6 +799,18 @@ require("lspconfig").buf_ls.setup({
 	on_attach = on_attach,
 })
 
+-- Terraform
+require("lspconfig").terraformls.setup({
+	capabilities = capabilities,
+	filetypes = { "terraform", "hcl" },
+	settings = {
+		terraformls = {
+			validation = { enabled = true },
+		},
+	},
+	on_attach = on_attach,
+})
+
 -- =============================================================================
 -- Auto-completion Configuration (nvim-cmp)
 -- =============================================================================
@@ -851,6 +879,7 @@ require("lint").linters_by_ft = {
 	javascriptreact = { "eslint" },
 	python = { "ruff" },
 	go = { "golangcilint" },
+	terraform = { "tflint", "tfsec" },
 	-- proto = {}, -- Disabled: buf_ls LSP provides real-time linting
 	-- rust = { "clippy" }, -- Disabled: rust-analyzer provides clippy diagnostics
 }
@@ -966,6 +995,10 @@ require("conform").setup({
 		go = { "gofumpt", "goimports" },
 		rust = { "rustfmt" },
 		proto = { "buf" },
+		terraform = { "terraform_fmt" },
+		tf = { "terraform_fmt" },
+		hcl = { "terraform_fmt" },
+		["terraform-vars"] = { "terraform_fmt" },
 	},
 	format_on_save = { timeout_ms = 3000, lsp_fallback = true },
 	formatters = {
@@ -1009,6 +1042,13 @@ require("conform").setup({
 				return project.has_python
 			end,
 		},
+		terraform_fmt = {
+			condition = function(ctx)
+				local root_dir = ctx.root or vim.fn.getcwd() or ""
+				local project = detect_project_type(root_dir)
+				return project.has_terraform
+			end,
+		},
 	},
 })
 
@@ -1026,6 +1066,10 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "proto",
+	command = "setlocal tabstop=2 shiftwidth=2 expandtab",
+})
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = { "terraform", "hcl" },
 	command = "setlocal tabstop=2 shiftwidth=2 expandtab",
 })
 
@@ -1174,6 +1218,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
 			vim.fn.jobstart("prettier --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
 			vim.fn.jobstart("eslint --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
 			vim.fn.jobstart("ruff --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
+			vim.fn.jobstart("terraform version", { detach = true, stderr_buffered = true, stdout_buffered = true })
 			vim.notify("Formatters initialized", vim.log.levels.INFO)
 		end, 1000)
 	end,
@@ -1420,6 +1465,47 @@ vim.keymap.set("n", "<leader>sv", function()
 	require("swenv.api").pick_venv()
 end, { desc = "Select virtual environment" })
 
+-- Terraform commands using terminal
+vim.keymap.set("n", "<leader>ti", function()
+	local term = require("toggleterm.terminal").Terminal:new({
+		cmd = "terraform init",
+		direction = "float",
+		close_on_exit = false,
+		auto_scroll = true,
+	})
+	term:toggle()
+end, { desc = "Terraform Init" })
+
+vim.keymap.set("n", "<leader>tp", function()
+	local term = require("toggleterm.terminal").Terminal:new({
+		cmd = "terraform plan",
+		direction = "float",
+		close_on_exit = false,
+		auto_scroll = true,
+	})
+	term:toggle()
+end, { desc = "Terraform Plan" })
+
+vim.keymap.set("n", "<leader>ta", function()
+	local term = require("toggleterm.terminal").Terminal:new({
+		cmd = "terraform apply",
+		direction = "float",
+		close_on_exit = false,
+		auto_scroll = true,
+	})
+	term:toggle()
+end, { desc = "Terraform Apply" })
+
+vim.keymap.set("n", "<leader>tv", function()
+	local term = require("toggleterm.terminal").Terminal:new({
+		cmd = "terraform validate",
+		direction = "float",
+		close_on_exit = false,
+		auto_scroll = true,
+	})
+	term:toggle()
+end, { desc = "Terraform Validate" })
+
 -- which-key registration (new spec format)
 require("which-key").add({
 	-- Group definitions
@@ -1436,6 +1522,7 @@ require("which-key").add({
 	{ "<leader>b", group = "Buffer" },
 	{ "<leader>x", group = "Trouble" },
 	{ "<leader>g", group = "Go" },
+	{ "<leader>t", group = "Terraform" },
 	{ "<leader>n", group = "Noice" },
 })
 

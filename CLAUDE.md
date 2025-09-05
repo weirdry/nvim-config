@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a modern Neovim configuration optimized for **TypeScript, Python, Go, Rust, and Protocol Buffers** development. It provides IDE-like features with comprehensive LSP support, built on top of lazy.nvim for fast startup times and the Tokyo Night theme for a modern aesthetic.
+This is a modern Neovim configuration optimized for **TypeScript, Python, Go, Rust, Protocol Buffers, and Terraform** development. It provides IDE-like features with comprehensive LSP support, built on top of lazy.nvim for fast startup times and the Tokyo Night theme for a modern aesthetic.
 
 ## Architecture
 
@@ -19,7 +19,7 @@ The configuration is structured as a single-file setup (`nvim/init.lua`) with se
 
 ### Key Design Patterns
 
-- **Project Detection**: Smart detection of project types (frontend, backend, CDK, Python) via `detect_project_type()` function
+- **Project Detection**: Smart detection of project types (frontend, backend, CDK, Python, Terraform) via `detect_project_type()` function
 - **Conditional Tool Loading**: Tools and formatters are conditionally enabled based on project configuration files
 - **VS Code Integration**: Reads `.vscode/settings.json` for TailwindCSS patterns and spell check words
 - **Performance Optimization**: Large file detection with automatic syntax/TreeSitter disabling
@@ -31,6 +31,7 @@ The configuration is structured as a single-file setup (`nvim/init.lua`) with se
 - **Go**: Uses go.nvim for advanced Go development features
 - **Python**: Virtual environment management with swenv.nvim
 - **Protocol Buffers**: Modern buf CLI integration with real-time LSP diagnostics and formatting
+- **Terraform**: Infrastructure as Code with terraform-ls LSP, tflint/tfsec linting, and terraform fmt formatting
 
 ## Common Development Commands
 
@@ -60,7 +61,7 @@ This is a Neovim configuration repository - there are no build or test commands.
 
 ### Code Analysis and Highlighting
 
-- **TreeSitter**: Syntax highlighting for TypeScript, JavaScript, TSX, HTML, CSS, Lua, Python, Go, Rust, TOML, Proto
+- **TreeSitter**: Syntax highlighting for TypeScript, JavaScript, TSX, HTML, CSS, Lua, Python, Go, Rust, TOML, Proto, HCL
 - **nvim-lint**: Language-specific linting with conditional loading (excludes Rust)
 - **conform.nvim**: Formatting with timeout and LSP fallback
 - **indent-blankline**: Visual indentation guides with scope highlighting
@@ -127,20 +128,22 @@ The configuration uses a hybrid approach for LSP servers:
   - `pyright`: Python with autoSearchPaths and openFilesOnly diagnostics
   - `gopls`: Go with staticcheck, gofumpt, and fuzzy matching
   - `buf_ls`: Protocol Buffers with real-time diagnostics via buf CLI
+  - `terraformls`: Terraform with validation and diagnostics
 - **rustaceanvim**: Handles `rust-analyzer` automatically with enhanced features
-- **Mason integration**: Auto-installs tools (black, isort, ruff, prettier, eslint_d, gopls, golangci-lint, gofumpt, goimports, codelldb, stylua, buf)
+- **Mason integration**: Auto-installs tools (black, isort, ruff, prettier, eslint_d, gopls, golangci-lint, gofumpt, goimports, codelldb, stylua, buf, terraform-ls, tflint, tfsec)
 
 ### Formatting and Linting Strategy
 
 - **Formatting**: Uses conform.nvim with 3-second timeout and LSP fallback
   - **Prettier**: Conditional loading for projects with prettier config, TailwindCSS plugin integration
   - **Black**: Python formatting with line-length 88, preview mode, and string processing
-  - **Other formatters**: stylua (Lua), gofumpt+goimports (Go), rustfmt (Rust), buf (Protocol Buffers)
+  - **Other formatters**: stylua (Lua), gofumpt+goimports (Go), rustfmt (Rust), buf (Protocol Buffers), terraform_fmt (Terraform)
 - **Linting**: Uses nvim-lint with conditional loading based on project type, excluding Rust and Protocol Buffers
   - **ESLint**: For JS/TS projects with conditional loading based on project detection
   - **Custom golangci-lint**: JSON output parsing with issue position mapping
   - **Ruff**: For Python projects
   - **Protocol Buffers**: Real-time linting via buf_ls LSP (not nvim-lint)
+  - **Terraform**: tflint and tfsec for Infrastructure as Code validation and security scanning
 - **ESLint Integration**: Uses `eslint_d` directly for fast auto-fixing on save (matches VS Code "source.fixAll.eslint": "explicit")
 - **Rust Linting**: Disabled clippy in nvim-lint - rustaceanvim provides comprehensive diagnostics
 
@@ -168,11 +171,11 @@ nvim/
 
 - **Large file detection** (>1MB) with syntax/TreeSitter disabling
 - **Large Rust file detection** (>5000 lines) with TreeSitter highlighting disabled
-- **Pre-initialization of formatters** on startup (black, isort, prettier, eslint, ruff)
+- **Pre-initialization of formatters** on startup (black, isort, prettier, eslint, ruff, terraform)
 - **Lazy loading** for most plugins
 - **Config file optimization** to prevent freezing (LspStop + TSBufDisable for init.lua)
 - **Rust-specific performance**: LSP log level set to WARN for large files
-- **Language-specific indentation**: Python (4 spaces), Go (4 tabs), Rust (4 spaces), TOML (2 spaces), Proto (2 spaces)
+- **Language-specific indentation**: Python (4 spaces), Go (4 tabs), Rust (4 spaces), TOML (2 spaces), Proto (2 spaces), Terraform/HCL (2 spaces)
 
 ### Advanced Integrations
 
@@ -195,6 +198,7 @@ nvim/
 - **Go**: Integrated with go.nvim for advanced features and auto-formatting with goimports on save
 - **Python**: Virtual environment detection and management with project-specific .venv support
 - **Protocol Buffers**: Uses modern buf CLI workflow with buf_ls LSP for real-time diagnostics, automatic formatting with `buf format`, and 2-space indentation following Protocol Buffer conventions
+- **Terraform**: Infrastructure as Code development with terraform-ls LSP, comprehensive linting via tflint and tfsec, automatic formatting with `terraform fmt`, and 2-space indentation following Terraform conventions
 
 ## Development Workflow
 
@@ -266,3 +270,7 @@ When working with this configuration:
 - **Interactive**: `<leader>cR` (run with args), `<leader>cT` (specific test)
 - **Direction-specific**: `<leader>crh` (horizontal), `<leader>crv` (vertical)
 
+### Terraform Integration (Infrastructure as Code)
+
+- **Basic**: `<leader>ti` (init), `<leader>tp` (plan), `<leader>ta` (apply), `<leader>tv` (validate)
+- **Features**: Auto-formatting on save, real-time LSP diagnostics, comprehensive linting

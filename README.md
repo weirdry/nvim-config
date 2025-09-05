@@ -1,6 +1,6 @@
 # Neovim Configuration
 
-A modern, IDE-like Neovim configuration with comprehensive LSP support, optimized for **TypeScript, Python, Go, Rust, and Protocol Buffers** development featuring the Tokyo Night theme.
+A modern, IDE-like Neovim configuration with comprehensive LSP support, optimized for **TypeScript, Python, Go, Rust, Protocol Buffers, and Terraform** development featuring the Tokyo Night theme.
 
 ![Neovim Screenshot](./screenshots/screenshot.webp)
 
@@ -22,6 +22,7 @@ Full LSP integration via [nvim-lspconfig](https://github.com/neovim/nvim-lspconf
 - **Go** - Enterprise development with gopls, golangci-lint, gofumpt
 - **Rust** - Modern systems programming with rustaceanvim, real-time diagnostics
 - **Protocol Buffers** - Modern API development with buf LSP and formatting
+- **Terraform** - Infrastructure as Code with terraform-ls, tflint, and tfsec
 - **TailwindCSS** - Modern CSS framework support
 - **HTML/CSS** - Web development essentials
 
@@ -129,6 +130,35 @@ Seamless compatibility with existing VS Code projects:
   - Enhanced error explanations with `:RustLsp explainError`
   - Automatic rust-analyzer configuration
 
+#### Terraform
+
+- **Terraform CLI** (latest stable) for Infrastructure as Code development
+- **Key features**: Comprehensive Terraform development setup:
+
+  ```bash
+  # Install via HashiCorp tap (macOS) - Recommended
+  brew tap hashicorp/tap
+  brew install hashicorp/tap/terraform
+
+  # Or via package manager (Ubuntu/Debian)
+  wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+  sudo apt update && sudo apt install terraform
+  ```
+
+- **Integrated tools** (installed automatically via Mason):
+  - `terraform-ls` - Language server for syntax highlighting and validation
+  - `tflint` - Linter for catching errors and enforcing best practices
+  - `tfsec` - Security scanner for Terraform code
+  - `terraform fmt` - Built-in code formatter for consistent style
+- **Features**:
+  - Real-time LSP diagnostics and validation
+  - Automatic formatting on save with `terraform fmt`
+  - Comprehensive linting with tflint and tfsec
+  - Syntax highlighting for `.tf`, `.tfvars`, and HCL files
+  - Project-specific configuration detection
+  - Terminal integration for `terraform init`, `plan`, `apply`, and `validate`
+
 ## Installation
 
 ### 1. Backup your existing configuration (if any)
@@ -168,6 +198,10 @@ go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 # Protocol Buffers (if using protobuf)
 brew install bufbuild/buf/buf
+
+# Terraform (if using Infrastructure as Code)
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
 ```
 
 ### 5. Launch Neovim
@@ -242,6 +276,15 @@ The plugins will be automatically installed on the first launch via Mason and la
 - `<leader>gtf` - Go to type definition
 - `<leader>gim` - Go to implementation
 - Auto-formatting on save with goimports
+
+### Terraform Development
+
+- `<leader>ti` - Terraform init
+- `<leader>tp` - Terraform plan
+- `<leader>ta` - Terraform apply
+- `<leader>tv` - Terraform validate
+- Auto-formatting on save with `terraform fmt`
+- Real-time linting with tflint and tfsec
 
 ### Diagnostics & Debugging
 
