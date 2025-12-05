@@ -233,8 +233,6 @@ require("lazy").setup({
 			require("mason-tool-installer").setup({
 				ensure_installed = {
 					-- Python tools
-					"black",
-					"isort",
 					"ruff",
 					-- TypeScript / JavaScript tools
 					"prettier",
@@ -990,7 +988,7 @@ require("conform").setup({
 		html = { "prettier" },
 		json = { "prettier" },
 		markdown = { "prettier" },
-		python = { "black", "isort" },
+		python = { "ruff_fix", "ruff_format" },
 		lua = { "stylua" },
 		go = { "gofumpt", "goimports" },
 		rust = { "rustfmt" },
@@ -1026,16 +1024,14 @@ require("conform").setup({
 				return {}
 			end,
 		},
-		black = {
-			prepend_args = { "--line-length", "88", "--preview", "--enable-unstable-feature", "string_processing" },
+		ruff_fix = {
 			condition = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
 				local project = detect_project_type(root_dir)
 				return project.has_python
 			end,
 		},
-		isort = {
-			prepend_args = { "--profile", "black" },
+		ruff_format = {
 			condition = function(ctx)
 				local root_dir = ctx.root or vim.fn.getcwd() or ""
 				local project = detect_project_type(root_dir)
@@ -1213,11 +1209,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
 		vim.defer_fn(function()
 			-- Initialize formatters asynchronously
-			vim.fn.jobstart("black --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
-			vim.fn.jobstart("isort --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
+			vim.fn.jobstart("ruff --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
 			vim.fn.jobstart("prettier --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
 			vim.fn.jobstart("eslint --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
-			vim.fn.jobstart("ruff --version", { detach = true, stderr_buffered = true, stdout_buffered = true })
 			vim.fn.jobstart("terraform version", { detach = true, stderr_buffered = true, stdout_buffered = true })
 			vim.notify("Formatters initialized", vim.log.levels.INFO)
 		end, 1000)
