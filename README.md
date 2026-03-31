@@ -29,7 +29,7 @@ Full LSP integration via Neovim 0.12's native `vim.lsp.config()` + `vim.lsp.enab
 ### 🔧 Development Tools
 
 - 📊 Syntax highlighting with [Treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
-- 📝 Intelligent auto-completion via [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)
+- 📝 Intelligent auto-completion via [blink.cmp](https://github.com/Saghen/blink.cmp)
 - 💅 Code formatting with [conform.nvim](https://github.com/stevearc/conform.nvim)
 - 🔬 Fast linting with [nvim-lint](https://github.com/mfussenegger/nvim-lint) + `eslint_d` for JavaScript/TypeScript
 - ⚡ Optimized ESLint auto-fixing on save (faster than traditional LSP approach)
@@ -47,7 +47,7 @@ Full LSP integration via Neovim 0.12's native `vim.lsp.config()` + `vim.lsp.enab
 - 🔎 Fuzzy finding with [Telescope](https://github.com/nvim-telescope/telescope.nvim)
 - 📁 File navigation with [nvim-tree](https://github.com/nvim-tree/nvim-tree.lua)
 - 📑 Enhanced UI with [bufferline](https://github.com/akinsho/bufferline.nvim), [lualine](https://github.com/nvim-lualine/lualine.nvim)
-- 🍞 Breadcrumb navigation with [barbecue](https://github.com/utilyre/barbecue.nvim)
+- 🍞 Breadcrumb navigation with [dropbar](https://github.com/Bekaboo/dropbar.nvim)
 - ⚡ Lightning-fast navigation with [harpoon](https://github.com/ThePrimeagen/harpoon)
 - 🎭 Integrated terminal with [toggleterm](https://github.com/akinsho/toggleterm.nvim)
 - ⚡ Quick jump navigation with [flash.nvim](https://github.com/folke/flash.nvim)
@@ -77,7 +77,7 @@ Seamless compatibility with existing VS Code projects:
 - 🔍 Advanced search highlighting with [hlslens](https://github.com/kevinhwang91/nvim-hlslens)
 - 📋 Clipboard history with [neoclip](https://github.com/AckslD/nvim-neoclip.lua)
 - 🏷️ TODO comments tracking with [todo-comments](https://github.com/folke/todo-comments.nvim)
-- 🎨 Color highlighting with [colorizer](https://github.com/NvChad/nvim-colorizer.lua)
+- 🎨 Color highlighting with [colorizer](https://github.com/catgoose/nvim-colorizer.lua)
 - 🔧 Problem diagnostics with [trouble.nvim](https://github.com/folke/trouble.nvim)
 - 🔄 LSP progress notifications with [fidget.nvim](https://github.com/j-hui/fidget.nvim)
 

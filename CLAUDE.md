@@ -14,7 +14,7 @@ The configuration is structured as a single-file setup (`nvim/init.lua`) with se
 
 - **Plugin Management**: Uses lazy.nvim with lazy loading for optimal performance
 - **Theme**: Tokyo Night "storm" style with terminal colors and italic comments/keywords
-- **UI Components**: lualine (status line), bufferline (buffer tabs), nvim-navic (breadcrumb), barbecue (context breadcrumbs)
+- **UI Components**: lualine (status line), bufferline (buffer tabs), dropbar.nvim (breadcrumb/winbar)
 - **LSP Foundation**: Neovim 0.12 native `vim.lsp.config()` + `vim.lsp.enable()` API with project-specific detection and configuration
 
 ### Key Design Patterns
@@ -53,7 +53,7 @@ This is a Neovim configuration repository - there are no build or test commands.
 
 ### Navigation and Search Tools
 
-- **Telescope**: Fuzzy finder with nvim-navic integration for winbar
+- **Telescope**: Fuzzy finder for files, text, symbols, and more
 - **nvim-tree**: File explorer with git integration and custom filtering (.DS_Store, node_modules, dist excluded)
 - **Flash**: Lightning-fast navigation with custom label sequence (asdfghjklqwertyuiopzxcvbnm)
 - **Harpoon v2**: Quick file bookmarking and navigation
@@ -101,9 +101,8 @@ This is a Neovim configuration repository - there are no build or test commands.
 - **swenv.nvim**: Python virtual environment switcher with project .venv support
 - **emmet-vim**: HTML/CSS expansion shortcuts
 - **vim-cmake**: CMake project integration
-- **Comment.nvim**: Intelligent code commenting
 - **nvim-autopairs**: Automatic bracket, quote, and tag pairing with TreeSitter
-- **nvim-colorizer**: Real-time color highlighting (RGB, HSL, CSS values)
+- **nvim-colorizer**: Real-time color highlighting (RGB, HSL, CSS values) via catgoose/nvim-colorizer.lua
 - **todo-comments.nvim**: TODO/FIXME/HACK comment highlighting and search
 
 ### Rust Development Workflow (rustaceanvim)
@@ -130,7 +129,7 @@ The configuration uses Neovim 0.12's native LSP API with `vim.lsp.config()` and 
   - `gopls`: Go with staticcheck, gofumpt, and fuzzy matching
   - `buf_ls`: Protocol Buffers with real-time diagnostics via buf CLI
   - `terraformls`: Terraform with validation and diagnostics
-- **Global capabilities**: Set via `vim.lsp.config("*", ...)` using cmp-nvim-lsp
+- **Global capabilities**: Set via `vim.lsp.config("*", ...)` using blink.cmp
 - **Centralized LspAttach autocmd**: Handles keymaps and per-server logic (e.g., Go-specific bindings)
 - **rustaceanvim**: Handles `rust-analyzer` automatically with enhanced features
 - **Mason integration**: Auto-installs tools (ruff, prettier, eslint_d, gopls, golangci-lint, gofumpt, goimports, codelldb, stylua, buf, terraform-ls, tflint, tfsec)
@@ -185,7 +184,7 @@ nvim/
 - **Terminal configuration**: Custom escape sequences (<Esc><Esc>) and window navigation
 - **VS Code spell check import**: Automatically reads .vscode/settings.json cSpell.words and creates project-specific spell files
 - **Custom commands**: `:RustNewProject` for quick Rust project creation
-- **Winbar integration**: Custom highlighting and nvim-navic breadcrumb display
+- **Winbar integration**: Managed by dropbar.nvim with LSP/treesitter breadcrumbs
 - **Diagnostic configuration**: Custom icons (󰅚 error, 󰀦 warn, 󰋼 info, 󰌶 hint) with virtual text and float settings
 
 ### VS Code Compatibility Features

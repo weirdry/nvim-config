@@ -150,67 +150,23 @@ require("lazy").setup({
 		end,
 	},
 	{
-		"SmiteshP/nvim-navic",
-		dependencies = { "neovim/nvim-lspconfig" },
+		"Bekaboo/dropbar.nvim",
+		dependencies = { "nvim-tree/nvim-web-devicons" },
 		config = function()
-			require("nvim-navic").setup({
-				icons = {
-					File = "󰈙 ",
-					Module = " ",
-					Namespace = "󰌗 ",
-					Package = " ",
-					Class = "󰌗 ",
-					Method = "󰆧 ",
-					Property = " ",
-					Field = " ",
-					Constructor = " ",
-					Enum = "󰕘",
-					Interface = "󰕘",
-					Function = "󰊕 ",
-					Variable = "󰆧 ",
-					Constant = "󰏿 ",
-					String = "󰀬 ",
-					Number = "󰎠 ",
-					Boolean = "◩ ",
-					Array = "󰅪 ",
-					Object = "󰅩 ",
-					Key = "󰌋 ",
-					Null = "󰟢 ",
-					EnumMember = " ",
-					Struct = "󰌗 ",
-					Event = " ",
-					Operator = "󰆕 ",
-					TypeParameter = "󰊄 ",
+			require("dropbar").setup({
+				bar = {
+					sources = function(buf, _)
+						local sources = require("dropbar.sources")
+						local utils = require("dropbar.utils")
+						if vim.bo[buf].ft == "markdown" then
+							return { sources.path, sources.markdown }
+						end
+						if vim.bo[buf].buftype == "terminal" then
+							return { sources.terminal }
+						end
+						return { sources.path, utils.source.fallback({ sources.lsp, sources.treesitter }) }
+					end,
 				},
-				lsp = { auto_attach = true },
-				highlight = true,
-				separator = " > ",
-				depth_limit = 0,
-				depth_limit_indicator = "..",
-				safe_output = true,
-				lazy_update_context = false,
-				click = true,
-			})
-		end,
-	},
-	{
-		"utilyre/barbecue.nvim",
-		dependencies = { "SmiteshP/nvim-navic", "nvim-tree/nvim-web-devicons" },
-		config = function()
-			require("barbecue").setup({
-				theme = {
-					normal = { fg = "#a9b1d6", bg = "#16161e" },
-					context = { fg = "#a9b1d6", bg = "#16161e" },
-					basename = { fg = "#a9b1d6", bg = "#16161e", bold = true },
-					dirname = { fg = "#737aa2", bg = "#16161e" },
-					separator = { fg = "#565f89", bg = "#16161e" },
-					modified = { fg = "#ff9e64", bg = "#16161e" },
-				},
-				include_buftypes = { "" },
-				exclude_filetypes = { "gitcommit", "toggleterm" },
-				show_modified = true,
-				show_dirname = true,
-				show_basename = true,
 			})
 		end,
 	},
@@ -259,23 +215,34 @@ require("lazy").setup({
 			})
 		end,
 	},
-	{ "hrsh7th/nvim-cmp", dependencies = { "hrsh7th/cmp-nvim-lsp", "hrsh7th/cmp-buffer", "hrsh7th/cmp-path" } },
+	{
+		"saghen/blink.cmp",
+		version = "1.*",
+		dependencies = { "rafamadriz/friendly-snippets" },
+		opts = {
+			keymap = {
+				preset = "none",
+				["<C-b>"] = { "scroll_documentation_up", "fallback" },
+				["<C-f>"] = { "scroll_documentation_down", "fallback" },
+				["<C-Space>"] = { "show", "show_documentation", "hide_documentation" },
+				["<C-e>"] = { "hide", "fallback" },
+				["<CR>"] = { "accept", "fallback" },
+				["<C-n>"] = { "select_next", "fallback" },
+				["<C-p>"] = { "select_prev", "fallback" },
+			},
+			appearance = { nerd_font_variant = "mono" },
+			completion = { documentation = { auto_show = true } },
+			sources = { default = { "lsp", "path", "snippets", "buffer" } },
+			fuzzy = { implementation = "prefer_rust_with_warning" },
+		},
+	},
 
 	-- File exploration and search
 	{
 		"nvim-telescope/telescope.nvim",
-		dependencies = { "nvim-lua/plenary.nvim", "SmiteshP/nvim-navic" },
+		dependencies = { "nvim-lua/plenary.nvim" },
 		config = function()
-			require("telescope").setup({
-				defaults = {
-					winbar = {
-						enable = true,
-						name_formatter = function(entry)
-							return require("nvim-navic").get_location()
-						end,
-					},
-				},
-			})
+			require("telescope").setup({})
 		end,
 	},
 	{
@@ -426,9 +393,7 @@ require("lazy").setup({
 		dependencies = { "nvim-lua/plenary.nvim" },
 		ft = { "rust", "toml" },
 		config = function()
-			require("crates").setup({
-				completion = { cmp = { enabled = true } },
-			})
+			require("crates").setup({})
 		end,
 	},
 	{
@@ -474,11 +439,6 @@ require("lazy").setup({
 				notify = { enabled = false },
 				lsp = {
 					progress = { enabled = false },
-					override = {
-						["vim.lsp.util.convert_input_to_markdown_lines"] = true,
-						["vim.lsp.util.stylize_markdown"] = true,
-						["cmp.entry.get_documentation"] = true,
-					},
 				},
 				presets = {
 					bottom_search = true,
@@ -613,12 +573,7 @@ require("lazy").setup({
 	},
 	{ "mattn/emmet-vim" },
 	{ "cdelledonne/vim-cmake" },
-	{
-		"numToStr/Comment.nvim",
-		config = function()
-			require("Comment").setup()
-		end,
-	},
+	-- Commenting is handled by Neovim's built-in gc/gcc (0.10+)
 	{
 		"windwp/nvim-autopairs",
 		config = function()
@@ -629,20 +584,22 @@ require("lazy").setup({
 		end,
 	},
 	{
-		"NvChad/nvim-colorizer.lua",
+		"catgoose/nvim-colorizer.lua",
 		config = function()
 			require("colorizer").setup({
 				filetypes = { "*" },
-				user_default_options = {
-					RGB = true,
-					RRGGBB = true,
-					names = false,
-					RRGGBBAA = true,
-					rgb_fn = true,
-					hsl_fn = true,
-					css = true,
-					css_fn = true,
-					mode = "background",
+				options = {
+					parsers = {
+						names = { enable = false },
+						hex = { default = true, rrggbbaa = true },
+						rgb = { enable = true },
+						hsl = { enable = true },
+						css = true,
+						css_fn = true,
+					},
+					display = {
+						mode = "background",
+					},
 				},
 			})
 		end,
@@ -672,7 +629,7 @@ require("lazy").setup({
 
 -- Global capabilities for all LSP servers
 vim.lsp.config("*", {
-	capabilities = require("cmp_nvim_lsp").default_capabilities(),
+	capabilities = require("blink.cmp").get_lsp_capabilities(),
 })
 
 -- Centralized LspAttach handler (replaces per-server on_attach)
@@ -824,20 +781,7 @@ vim.lsp.enable({
 	"terraformls",
 })
 
--- =============================================================================
--- Auto-completion Configuration (nvim-cmp)
--- =============================================================================
-local cmp = require("cmp")
-cmp.setup({
-	mapping = cmp.mapping.preset.insert({
-		["<C-b>"] = cmp.mapping.scroll_docs(-4),
-		["<C-f>"] = cmp.mapping.scroll_docs(4),
-		["<C-Space>"] = cmp.mapping.complete(),
-		["<C-e>"] = cmp.mapping.abort(),
-		["<CR>"] = cmp.mapping.confirm({ select = true }),
-	}),
-	sources = { { name = "nvim_lsp" }, { name = "buffer" }, { name = "path" } },
-})
+-- Auto-completion is handled by blink.cmp (configured in plugin spec above)
 
 -- =============================================================================
 -- Debugger Configuration (nvim-dap)
@@ -1542,11 +1486,7 @@ require("which-key").add({
 -- =============================================================================
 -- UI and Other Settings
 -- =============================================================================
--- Winbar
-vim.api.nvim_set_hl(0, "Winbar", { bg = "#1a1b26", fg = "#a9b1d6", bold = true, italic = false })
-vim.api.nvim_set_hl(0, "NavicText", { fg = "#a9b1d6", bg = "#1a1b26" })
-vim.api.nvim_set_hl(0, "NavicSeparator", { fg = "#565f89", bg = "#1a1b26" })
-vim.o.winbar = "%#Winbar#%{%v:lua.require'nvim-navic'.get_location()%}"
+-- Winbar is managed by dropbar.nvim
 
 -- Diagnostic display configuration
 vim.diagnostic.config({
