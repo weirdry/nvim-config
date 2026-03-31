@@ -15,7 +15,7 @@ The configuration is structured as a single-file setup (`nvim/init.lua`) with se
 - **Plugin Management**: Uses lazy.nvim with lazy loading for optimal performance
 - **Theme**: Tokyo Night "storm" style with terminal colors and italic comments/keywords
 - **UI Components**: lualine (status line), bufferline (buffer tabs), nvim-navic (breadcrumb), barbecue (context breadcrumbs)
-- **LSP Foundation**: Built on nvim-lspconfig with project-specific detection and configuration
+- **LSP Foundation**: Neovim 0.12 native `vim.lsp.config()` + `vim.lsp.enable()` API with project-specific detection and configuration
 
 ### Key Design Patterns
 
@@ -84,7 +84,8 @@ This is a Neovim configuration repository - there are no build or test commands.
 
 - **vim-visual-multi**: Multi-cursor editing with "ocean" theme
 - **trouble.nvim**: Diagnostics, references, and quickfix management
-- **noice.nvim**: Enhanced UI for messages, cmdline, and popups with notify disabled
+- **noice.nvim**: Enhanced UI for messages, cmdline, and popups with notify disabled (LSP progress delegated to fidget.nvim)
+- **fidget.nvim**: LSP progress notifications with per-client grouping
 - **nvim-surround**: Text object manipulation for quotes, brackets, etc.
 - **nvim-hlslens**: Enhanced search highlighting with match count
 - **vim-illuminate**: Highlight matching words under cursor with 100ms delay
@@ -120,23 +121,25 @@ This is a Neovim configuration repository - there are no build or test commands.
 
 ### Language Server Management
 
-The configuration uses a hybrid approach for LSP servers:
+The configuration uses Neovim 0.12's native LSP API with `vim.lsp.config()` and `vim.lsp.enable()`:
 
-- **Manual lspconfig setup**:
+- **Native LSP configuration** (`vim.lsp.config()`):
   - `ts_ls`: TypeScript/JavaScript with enhanced diagnostics and file location context
   - `tailwindcss`: With VS Code-compatible classAttributes and experimental classRegex patterns
   - `pyright`: Python with autoSearchPaths and openFilesOnly diagnostics
   - `gopls`: Go with staticcheck, gofumpt, and fuzzy matching
   - `buf_ls`: Protocol Buffers with real-time diagnostics via buf CLI
   - `terraformls`: Terraform with validation and diagnostics
+- **Global capabilities**: Set via `vim.lsp.config("*", ...)` using cmp-nvim-lsp
+- **Centralized LspAttach autocmd**: Handles keymaps and per-server logic (e.g., Go-specific bindings)
 - **rustaceanvim**: Handles `rust-analyzer` automatically with enhanced features
-- **Mason integration**: Auto-installs tools (black, isort, ruff, prettier, eslint_d, gopls, golangci-lint, gofumpt, goimports, codelldb, stylua, buf, terraform-ls, tflint, tfsec)
+- **Mason integration**: Auto-installs tools (ruff, prettier, eslint_d, gopls, golangci-lint, gofumpt, goimports, codelldb, stylua, buf, terraform-ls, tflint, tfsec)
 
 ### Formatting and Linting Strategy
 
-- **Formatting**: Uses conform.nvim with 3-second timeout and LSP fallback
+- **Formatting**: Uses conform.nvim with 3-second timeout and LSP format fallback
   - **Prettier**: Conditional loading for projects with prettier config, TailwindCSS plugin integration
-  - **Black**: Python formatting with line-length 88, preview mode, and string processing
+  - **Ruff**: Python formatting and import sorting (ruff_fix + ruff_format)
   - **Other formatters**: stylua (Lua), gofumpt+goimports (Go), rustfmt (Rust), buf (Protocol Buffers), terraform_fmt (Terraform)
 - **Linting**: Uses nvim-lint with conditional loading based on project type, excluding Rust and Protocol Buffers
   - **ESLint**: For JS/TS projects with conditional loading based on project detection
@@ -171,9 +174,9 @@ nvim/
 
 - **Large file detection** (>1MB) with syntax/TreeSitter disabling
 - **Large Rust file detection** (>5000 lines) with TreeSitter highlighting disabled
-- **Pre-initialization of formatters** on startup (black, isort, prettier, eslint, ruff, terraform)
+- **Pre-initialization of formatters** on startup (ruff, prettier, eslint, terraform)
 - **Lazy loading** for most plugins
-- **Config file optimization** to prevent freezing (LspStop + TSBufDisable for init.lua)
+- **Config file optimization** to prevent freezing (LspStop + `vim.treesitter.stop()` for init.lua)
 - **Rust-specific performance**: LSP log level set to WARN for large files
 - **Language-specific indentation**: Python (4 spaces), Go (4 tabs), Rust (4 spaces), TOML (2 spaces), Proto (2 spaces), Terraform/HCL (2 spaces)
 

@@ -15,10 +15,10 @@ A modern, IDE-like Neovim configuration with comprehensive LSP support, optimize
 
 ### 🔍 LSP & Language Support
 
-Full LSP integration via [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) with:
+Full LSP integration via Neovim 0.12's native `vim.lsp.config()` + `vim.lsp.enable()` API with:
 
 - **TypeScript/JavaScript** - Full-stack development with ESLint, Prettier
-- **Python** - Data science ready with Black, isort, ruff
+- **Python** - Data science ready with ruff (formatting + linting)
 - **Go** - Enterprise development with gopls, golangci-lint, gofumpt
 - **Rust** - Modern systems programming with rustaceanvim, real-time diagnostics
 - **Protocol Buffers** - Modern API development with buf LSP and formatting
@@ -77,12 +77,13 @@ Seamless compatibility with existing VS Code projects:
 - 🔍 Advanced search highlighting with [hlslens](https://github.com/kevinhwang91/nvim-hlslens)
 - 📋 Clipboard history with [neoclip](https://github.com/AckslD/nvim-neoclip.lua)
 - 🏷️ TODO comments tracking with [todo-comments](https://github.com/folke/todo-comments.nvim)
-- 🎨 Color highlighting with [colorizer](https://github.com/norcalli/nvim-colorizer.lua)
+- 🎨 Color highlighting with [colorizer](https://github.com/NvChad/nvim-colorizer.lua)
 - 🔧 Problem diagnostics with [trouble.nvim](https://github.com/folke/trouble.nvim)
+- 🔄 LSP progress notifications with [fidget.nvim](https://github.com/j-hui/fidget.nvim)
 
 ## System Requirements
 
-- **Neovim** >= 0.9.0 (0.10+ recommended)
+- **Neovim** >= 0.12.0
 - **Git** for version control and plugin management
 - [**ripgrep**](https://github.com/BurntSushi/ripgrep) for Telescope file search
 - [**fd**](https://github.com/sharkdp/fd) for Telescope file finder
@@ -321,9 +322,9 @@ This configuration is designed to be easily customizable:
 
 ### Adding New Languages
 
-1. Add LSP server to `mason-lspconfig` ensure_installed list
-2. Configure LSP in the LSP settings section
-3. Add formatters/linters to respective sections
+1. Add tools to `mason-tool-installer` ensure_installed list
+2. Configure LSP via `vim.lsp.config("server", { ... })` and add to `vim.lsp.enable()` list
+3. Add formatters/linters to respective sections (conform.nvim / nvim-lint)
 4. Add language-specific autocmds if needed
 
 ### Modifying Key Mappings
