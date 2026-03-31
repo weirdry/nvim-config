@@ -473,6 +473,7 @@ require("lazy").setup({
 			require("noice").setup({
 				notify = { enabled = false },
 				lsp = {
+					progress = { enabled = false },
 					override = {
 						["vim.lsp.util.convert_input_to_markdown_lines"] = true,
 						["vim.lsp.util.stylize_markdown"] = true,
@@ -488,6 +489,12 @@ require("lazy").setup({
 				},
 				routes = { { view = "notify", filter = { event = "msg_showmode" } } },
 			})
+		end,
+	},
+	{
+		"j-hui/fidget.nvim",
+		config = function()
+			require("fidget").setup({})
 		end,
 	},
 	{
