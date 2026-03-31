@@ -2,7 +2,7 @@
 
 -- Lazy.nvim installation
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
 	vim.fn.system({
 		"git",
 		"clone",
@@ -214,7 +214,7 @@ require("lazy").setup({
 			})
 		end,
 	},
-	{ "kyazdani42/nvim-web-devicons" },
+	{ "nvim-tree/nvim-web-devicons" },
 
 	-- LSP, auto-completion, and tool installation
 	{ "neovim/nvim-lspconfig" },
@@ -622,17 +622,21 @@ require("lazy").setup({
 		end,
 	},
 	{
-		"norcalli/nvim-colorizer.lua",
+		"NvChad/nvim-colorizer.lua",
 		config = function()
-			require("colorizer").setup({ "*" }, {
-				RGB = true,
-				RRGGBB = true,
-				names = false,
-				RRGGBBAA = true,
-				rgb_fn = true,
-				hsl_fn = true,
-				css = true,
-				css_fn = true,
+			require("colorizer").setup({
+				filetypes = { "*" },
+				user_default_options = {
+					RGB = true,
+					RRGGBB = true,
+					names = false,
+					RRGGBBAA = true,
+					rgb_fn = true,
+					hsl_fn = true,
+					css = true,
+					css_fn = true,
+					mode = "background",
+				},
 			})
 		end,
 	},
@@ -1000,7 +1004,7 @@ require("conform").setup({
 		hcl = { "terraform_fmt" },
 		["terraform-vars"] = { "terraform_fmt" },
 	},
-	format_on_save = { timeout_ms = 3000, lsp_fallback = true },
+	format_on_save = { timeout_ms = 3000, lsp_format = "fallback" },
 	formatters = {
 		prettier = {
 			env = { PRETTIERD_DEFAULT_CONFIG = vim.fn.expand("~/.config/nvim/prettierrc.json") },
@@ -1093,7 +1097,7 @@ vim.api.nvim_create_autocmd("FileType", {
 		vim.opt_local.textwidth = 100
 		vim.opt_local.colorcolumn = "100"
 		if vim.fn.line("$") > 5000 then
-			vim.cmd("TSBufDisable highlight")
+			vim.treesitter.stop(0)
 			vim.notify("Large Rust file detected, disabling TreeSitter highlights for performance")
 		end
 		vim.lsp.set_log_level("WARN")
@@ -1138,7 +1142,7 @@ vim.api.nvim_create_autocmd("BufReadPre", {
 		local file_size = vim.fn.getfsize(vim.fn.expand("%"))
 		if file_size > 1024 * 1024 then -- Over 1MB
 			vim.cmd("syntax off")
-			vim.cmd("TSBufDisable highlight")
+			vim.treesitter.stop(0)
 			vim.notify("Large file detected, disabling syntax for performance")
 		end
 	end,
@@ -1149,7 +1153,7 @@ vim.api.nvim_create_autocmd("BufReadPre", {
 	pattern = vim.fn.stdpath("config") .. "/init.lua",
 	callback = function()
 		vim.cmd("LspStop")
-		vim.cmd("TSBufDisable highlight")
+		vim.treesitter.stop(0)
 		vim.notify("Config file opened with limited features to prevent freezing")
 	end,
 })
@@ -1388,8 +1392,12 @@ vim.keymap.set("n", "<leader>bp", "<Cmd>BufferLinePick<CR>", { desc = "Pick buff
 vim.keymap.set("n", "<leader>bs", "<Cmd>BufferLineSortByDirectory<CR>", { desc = "Sort buffers by directory" })
 
 -- Diagnostics
-vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous Diagnostic" })
-vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next Diagnostic" })
+vim.keymap.set("n", "[d", function()
+	vim.diagnostic.jump({ count = -1, float = true })
+end, { desc = "Previous Diagnostic" })
+vim.keymap.set("n", "]d", function()
+	vim.diagnostic.jump({ count = 1, float = true })
+end, { desc = "Next Diagnostic" })
 vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { desc = "Show Diagnostic" })
 vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Diagnostic List" })
 
