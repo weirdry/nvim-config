@@ -316,9 +316,11 @@ require("lazy").setup({
 	{ "stevearc/conform.nvim", event = { "BufReadPre", "BufNewFile" } },
 	{
 		"nvim-treesitter/nvim-treesitter",
+		branch = "main",
 		build = ":TSUpdate",
+		lazy = false,
 		config = function()
-			require("nvim-treesitter.configs").setup({
+			require("nvim-treesitter").setup({
 				ensure_installed = {
 					"typescript",
 					"javascript",
@@ -332,9 +334,9 @@ require("lazy").setup({
 					"toml",
 					"proto",
 					"hcl",
+					"markdown",
+					"markdown_inline",
 				},
-				highlight = { enable = true },
-				indent = { enable = true },
 			})
 		end,
 	},
