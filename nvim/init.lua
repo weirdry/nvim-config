@@ -1109,7 +1109,7 @@ vim.api.nvim_create_autocmd("FileType", {
 			vim.treesitter.stop(0)
 			vim.notify("Large Rust file detected, disabling TreeSitter highlights for performance")
 		end
-		vim.lsp.set_log_level("WARN")
+		vim.lsp.log.set_level("WARN")
 	end,
 })
 vim.api.nvim_create_autocmd("FileType", {
