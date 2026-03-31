@@ -660,29 +660,52 @@ require("lazy").setup({
 })
 
 -- =============================================================================
--- LSP Configuration
+-- LSP Configuration (Neovim 0.12 native API)
 -- =============================================================================
-local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-local function on_attach(client, bufnr)
-	-- navic connection
-	if client.server_capabilities.documentSymbolProvider then
-		require("nvim-navic").attach(client, bufnr)
-	end
+-- Global capabilities for all LSP servers
+vim.lsp.config("*", {
+	capabilities = require("cmp_nvim_lsp").default_capabilities(),
+})
 
-	-- Basic key mappings
-	vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr })
-	vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = bufnr })
-	vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = bufnr })
-	vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr })
-	vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = bufnr })
-	vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = bufnr })
-end
+-- Centralized LspAttach handler (replaces per-server on_attach)
+vim.api.nvim_create_autocmd("LspAttach", {
+	callback = function(args)
+		local bufnr = args.buf
+		local client = vim.lsp.get_client_by_id(args.data.client_id)
+		if not client then
+			return
+		end
+
+		-- Basic keymaps for all LSP servers
+		vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr })
+		vim.keymap.set("n", "gr", vim.lsp.buf.references, { buffer = bufnr })
+		vim.keymap.set("n", "gi", vim.lsp.buf.implementation, { buffer = bufnr })
+		vim.keymap.set("n", "K", vim.lsp.buf.hover, { buffer = bufnr })
+		vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { buffer = bufnr })
+		vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = bufnr })
+
+		-- Go-specific keymaps
+		if client.name == "gopls" then
+			vim.keymap.set(
+				"n",
+				"<leader>gtf",
+				vim.lsp.buf.type_definition,
+				{ buffer = bufnr, desc = "Go to type definition" }
+			)
+			vim.keymap.set(
+				"n",
+				"<leader>gim",
+				vim.lsp.buf.implementation,
+				{ buffer = bufnr, desc = "Go to implementation" }
+			)
+		end
+	end,
+})
 
 -- TypeScript
-require("lspconfig").ts_ls.setup({
-	capabilities = capabilities,
-	root_dir = require("lspconfig").util.root_pattern("package.json", "tsconfig.json"),
+vim.lsp.config("ts_ls", {
+	root_markers = { "package.json", "tsconfig.json" },
 	handlers = {
 		["textDocument/publishDiagnostics"] = function(_, params, _, config)
 			if params and params.diagnostics then
@@ -705,24 +728,21 @@ require("lspconfig").ts_ls.setup({
 			vim.lsp.diagnostic.on_publish_diagnostics(_, params, _, config)
 		end,
 	},
-	on_attach = on_attach,
 })
 
 -- TailwindCSS
-require("lspconfig").tailwindcss.setup({
-	capabilities = capabilities,
-	root_dir = require("lspconfig").util.root_pattern(
+vim.lsp.config("tailwindcss", {
+	root_markers = {
 		"tailwind.config.js",
 		"tailwind.config.ts",
 		"postcss.config.js",
-		"postcss.config.ts"
-	),
+		"postcss.config.ts",
+	},
 	settings = {
 		tailwindCSS = {
-			classAttributes = { "cn", "class", "className", ".*ClassName" }, -- matches VS Code
+			classAttributes = { "cn", "class", "className", ".*ClassName" },
 			experimental = {
 				classRegex = {
-					-- Matches VS Code patterns exactly
 					"className:\\s*['\"`]([^'\"`]*)['\"`]",
 					"cn\\(([^)]*)\\)",
 					"[\"'`]([^\"'`]*).*?[\"'`]",
@@ -740,15 +760,12 @@ require("lspconfig").tailwindcss.setup({
 			},
 		},
 	},
-	on_attach = on_attach,
 })
 
 -- ESLint LSP disabled - using eslint_d via nvim-lint instead
--- This avoids "Unable to find ESLint library" errors
 
 -- Python
-require("lspconfig").pyright.setup({
-	capabilities = capabilities,
+vim.lsp.config("pyright", {
 	settings = {
 		python = {
 			analysis = {
@@ -759,12 +776,10 @@ require("lspconfig").pyright.setup({
 			},
 		},
 	},
-	on_attach = on_attach,
 })
 
 -- Go
-require("lspconfig").gopls.setup({
-	capabilities = capabilities,
+vim.lsp.config("gopls", {
 	settings = {
 		gopls = {
 			analyses = { unusedparams = true, shadow = true },
@@ -775,44 +790,31 @@ require("lspconfig").gopls.setup({
 			matcher = "fuzzy",
 		},
 	},
-	on_attach = function(client, bufnr)
-		on_attach(client, bufnr)
-		-- Go-specific keymaps
-		vim.keymap.set(
-			"n",
-			"<leader>gtf",
-			"<cmd>lua vim.lsp.buf.type_definition()<CR>",
-			{ buffer = bufnr, desc = "Go to type definition" }
-		)
-		vim.keymap.set(
-			"n",
-			"<leader>gim",
-			"<cmd>lua vim.lsp.buf.implementation()<CR>",
-			{ buffer = bufnr, desc = "Go to implementation" }
-		)
-	end,
 })
 
--- Rust LSP configuration is now handled by rustaceanvim plugin above
--- This provides better real-time diagnostics and follows modern Rust+Neovim practices
--- Key features: automatic rust-analyzer setup, background test diagnostics, error explanations
+-- Rust LSP is handled by rustaceanvim plugin (not configured here)
 
--- Protocol Buffers (buf LSP is built into buf CLI)
-require("lspconfig").buf_ls.setup({
-	capabilities = capabilities,
-	on_attach = on_attach,
-})
+-- Protocol Buffers
+vim.lsp.config("buf_ls", {})
 
 -- Terraform
-require("lspconfig").terraformls.setup({
-	capabilities = capabilities,
+vim.lsp.config("terraformls", {
 	filetypes = { "terraform", "hcl" },
 	settings = {
 		terraformls = {
 			validation = { enabled = true },
 		},
 	},
-	on_attach = on_attach,
+})
+
+-- Enable all LSP servers
+vim.lsp.enable({
+	"ts_ls",
+	"tailwindcss",
+	"pyright",
+	"gopls",
+	"buf_ls",
+	"terraformls",
 })
 
 -- =============================================================================
