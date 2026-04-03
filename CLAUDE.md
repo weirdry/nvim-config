@@ -8,7 +8,7 @@ This is a modern Neovim configuration optimized for **TypeScript, Python, Go, Ru
 
 ## Architecture
 
-The configuration is structured as a single-file setup (`nvim/init.lua`) with several key architectural components:
+The configuration is modularized under `nvim/lua/` with the following key architectural components:
 
 ### Core Infrastructure
 
@@ -153,13 +153,22 @@ The configuration uses Neovim 0.12's native LSP API with `vim.lsp.config()` and 
 
 ```
 nvim/
-├── nvim/
-│   ├── init.lua           # Main configuration file (all-in-one)
-│   └── lazy-lock.json     # Plugin version lock file
-├── README.md              # Comprehensive documentation
-├── CLAUDE.md              # Development guidance for Claude Code
-├── .gitignore             # Git ignore patterns
-└── screenshots/           # Configuration screenshots
+├── init.lua                    # Bootstrap: lazy.nvim install + module loading
+├── lazy-lock.json              # Plugin version lock file
+├── lua/
+│   ├── config/
+│   │   ├── options.lua         # Basic editor settings
+│   │   ├── helpers.lua         # Project detection utilities (shared)
+│   │   ├── lsp.lua             # LSP server configuration (native API)
+│   │   ├── linting.lua         # Linters, formatters, and conform.nvim
+│   │   ├── autocmds.lua        # Autocommands, debugger, diagnostics, commands
+│   │   └── keymaps.lua         # All key mappings
+│   └── plugins/
+│       └── init.lua            # Plugin specifications (lazy.nvim)
+├── README.md
+├── CLAUDE.md
+├── .gitignore
+└── screenshots/
 ```
 
 ## Key Configuration Details
@@ -173,7 +182,6 @@ nvim/
 
 - **Large file detection** (>1MB) with syntax/TreeSitter disabling
 - **Large Rust file detection** (>5000 lines) with TreeSitter highlighting disabled
-- **Pre-initialization of formatters** on startup (ruff, prettier, eslint, terraform)
 - **Lazy loading** for most plugins
 - **Config file optimization** to prevent freezing (LspStop + `vim.treesitter.stop()` for init.lua)
 - **Rust-specific performance**: LSP log level set to WARN for large files

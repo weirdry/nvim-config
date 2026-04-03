@@ -51,6 +51,8 @@ Full LSP integration via Neovim 0.12's native `vim.lsp.config()` + `vim.lsp.enab
 - ⚡ Lightning-fast navigation with [harpoon](https://github.com/ThePrimeagen/harpoon)
 - 🎭 Integrated terminal with [toggleterm](https://github.com/akinsho/toggleterm.nvim)
 - ⚡ Quick jump navigation with [flash.nvim](https://github.com/folke/flash.nvim)
+- 💬 Enhanced command UI with [noice.nvim](https://github.com/folke/noice.nvim)
+- 🔑 Key binding hints with [which-key.nvim](https://github.com/folke/which-key.nvim)
 
 ### 🔄 Git Integration
 
@@ -310,9 +312,19 @@ The plugins will be automatically installed on the first launch via Mason and la
 
 ```
 ~/.config/nvim/
-├── init.lua              # Main configuration file
-├── README.md            # This file
-└── screenshots/         # Configuration screenshots
+├── init.lua                    # Bootstrap: lazy.nvim install + module loading
+├── lua/
+│   ├── config/
+│   │   ├── options.lua         # Basic editor settings
+│   │   ├── helpers.lua         # Project detection utilities
+│   │   ├── lsp.lua             # LSP server configuration
+│   │   ├── linting.lua         # Linters and formatters
+│   │   ├── autocmds.lua        # Autocommands and diagnostics
+│   │   └── keymaps.lua         # All key mappings
+│   └── plugins/
+│       └── init.lua            # Plugin specifications
+├── README.md                   # This file
+└── screenshots/
     └── screenshot.webp
 ```
 
@@ -329,11 +341,11 @@ This configuration is designed to be easily customizable:
 
 ### Modifying Key Mappings
 
-All key mappings are centralized in the "키 매핑 (Keymaps)" section for easy modification.
+All key mappings are centralized in `lua/config/keymaps.lua` for easy modification.
 
 ### Plugin Configuration
 
-Each plugin configuration is clearly separated and documented within the lazy.nvim setup block.
+Plugin specs are in `lua/plugins/init.lua`. LSP, linting, autocmds, and keymaps each have their own file under `lua/config/`.
 
 ## Troubleshooting
 
@@ -363,7 +375,6 @@ This configuration is optimized for performance with:
 - **Smart project detection** - Conditional tool loading based on project type
 - **Fast buffer reloading** - Optimized file change detection after auto-fixes
 - **Large file optimizations** - Automatic syntax/TreeSitter disabling for files >1MB
-- **Pre-initialized formatters** - Background loading of formatting tools on startup
 
 ## Credits
 
