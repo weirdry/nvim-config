@@ -105,7 +105,23 @@ vim.lsp.config("pyright", {
 vim.lsp.config("gopls", {
 	settings = {
 		gopls = {
-			analyses = { unusedparams = true, shadow = true },
+			-- gopls runs its built-in staticcheck suite (it ignores staticcheck.conf;
+			-- see golang/go#36373), so pin the documented default check set here by
+			-- disabling the opinionated style checks (ST1000 package comments,
+			-- ST1003 initialism naming, ...) this project doesn't enforce.
+			-- Mirrors staticcheck.conf's checks = ["all", "-SA9003", "-ST1000", ...].
+			analyses = {
+				unusedparams = true,
+				shadow = true,
+				SA9003 = false,
+				ST1000 = false,
+				ST1003 = false,
+				ST1016 = false,
+				ST1020 = false,
+				ST1021 = false,
+				ST1022 = false,
+				ST1023 = false,
+			},
 			staticcheck = true,
 			gofumpt = true,
 			usePlaceholders = true,
